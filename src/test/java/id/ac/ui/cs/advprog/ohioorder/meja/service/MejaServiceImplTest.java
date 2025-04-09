@@ -54,15 +54,12 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void createMeja_Success() {
-        // Arrange
+    void testCreateMejaSuccess() {
         when(mejaRepository.existsByNomorMeja(mejaRequest.getNomorMeja())).thenReturn(false);
         when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
 
-        // Act
         MejaResponse result = mejaService.createMeja(mejaRequest);
 
-        // Assert
         assertNotNull(result);
         assertEquals(meja.getId(), result.getId());
         assertEquals(meja.getNomorMeja(), result.getNomorMeja());
@@ -73,11 +70,9 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void createMeja_ThrowsException_WhenMejaExists() {
-        // Arrange
+    void testCreateMejaThrowsExceptionWhenMejaExists() {
         when(mejaRepository.existsByNomorMeja(mejaRequest.getNomorMeja())).thenReturn(true);
 
-        // Act & Assert
         assertThrows(MejaAlreadyExistsException.class, () -> {
             mejaService.createMeja(mejaRequest);
         });
@@ -87,8 +82,7 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void getAllMeja_ReturnsAllMeja() {
-        // Arrange
+    void testGetAllMejaReturnsAllMeja() {
         Meja meja2 = Meja.builder()
                 .id(UUID.randomUUID())
                 .nomorMeja("A2")
@@ -97,10 +91,8 @@ class MejaServiceImplTest {
         
         when(mejaRepository.findAll()).thenReturn(Arrays.asList(meja, meja2));
 
-        // Act
         List<MejaResponse> result = mejaService.getAllMeja();
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(meja.getId(), result.get(0).getId());
@@ -112,14 +104,11 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void getMejaById_ReturnsMeja_WhenExists() {
-        // Arrange
+    void testGetMejaByIdReturnsMejaWhenExists() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
 
-        // Act
         MejaResponse result = mejaService.getMejaById(uuid);
 
-        // Assert
         assertNotNull(result);
         assertEquals(meja.getId(), result.getId());
         assertEquals(meja.getNomorMeja(), result.getNomorMeja());
@@ -129,11 +118,9 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void getMejaById_ThrowsException_WhenNotExists() {
-        // Arrange
+    void testGetMejaByIdThrowsExceptionWhenNotExists() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(MejaNotFoundException.class, () -> {
             mejaService.getMejaById(uuid);
         });
@@ -142,8 +129,7 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void updateMeja_Success_WhenNoConflict() {
-        // Arrange
+    void testUpdateMejaSuccessWhenNoConflict() {
         MejaRequest updateRequest = MejaRequest.builder()
                 .nomorMeja("A2")
                 .build();
@@ -158,10 +144,8 @@ class MejaServiceImplTest {
         when(mejaRepository.findByNomorMeja(updateRequest.getNomorMeja())).thenReturn(Optional.empty());
         when(mejaRepository.save(any(Meja.class))).thenReturn(updatedMeja);
 
-        // Act
         MejaResponse result = mejaService.updateMeja(uuid, updateRequest);
 
-        // Assert
         assertNotNull(result);
         assertEquals(updatedMeja.getId(), result.getId());
         assertEquals(updatedMeja.getNomorMeja(), result.getNomorMeja());
@@ -173,11 +157,9 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void updateMeja_ThrowsException_WhenMejaNotFound() {
-        // Arrange
+    void testUpdateMejaThrowsExceptionWhenMejaNotFound() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(MejaNotFoundException.class, () -> {
             mejaService.updateMeja(uuid, mejaRequest);
         });
@@ -188,8 +170,7 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void updateMeja_ThrowsException_WhenNomorMejaConflict() {
-        // Arrange
+    void testUpdateMejaThrowsExceptionWhenNomorMejaConflict() {
         UUID otherUuid = UUID.randomUUID();
         Meja otherMeja = Meja.builder()
                 .id(otherUuid)
@@ -204,7 +185,6 @@ class MejaServiceImplTest {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
         when(mejaRepository.findByNomorMeja(updateRequest.getNomorMeja())).thenReturn(Optional.of(otherMeja));
 
-        // Act & Assert
         assertThrows(MejaAlreadyExistsException.class, () -> {
             mejaService.updateMeja(uuid, updateRequest);
         });
@@ -215,25 +195,20 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void deleteMeja_Success_WhenAvailable() {
-        // Arrange
+    void testDeleteMejaSuccessWhenAvailable() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
         doNothing().when(mejaRepository).delete(meja);
 
-        // Act
         mejaService.deleteMeja(uuid);
 
-        // Assert
         verify(mejaRepository).findById(uuid);
         verify(mejaRepository).delete(meja);
     }
 
     @Test
-    void deleteMeja_ThrowsException_WhenMejaNotFound() {
-        // Arrange
+    void testDeleteMejaThrowsExceptionWhenMejaNotFound() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(MejaNotFoundException.class, () -> {
             mejaService.deleteMeja(uuid);
         });
@@ -243,8 +218,7 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void deleteMeja_ThrowsException_WhenMejaHasPesanan() {
-        // Arrange
+    void testDeleteMejaThrowsExceptionWhenMejaHasPesanan() {
         Meja busyMeja = Meja.builder()
                 .id(uuid)
                 .nomorMeja("A1")
@@ -253,7 +227,6 @@ class MejaServiceImplTest {
         
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(busyMeja));
 
-        // Act & Assert
         assertThrows(MejaHasPesananException.class, () -> {
             mejaService.deleteMeja(uuid);
         });
@@ -263,14 +236,11 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void getMejaByNomorMeja_ReturnsMeja_WhenExists() {
-        // Arrange
+    void testGetMejaByNomorMejaReturnsMejaWhenExists() {
         when(mejaRepository.findByNomorMeja("A1")).thenReturn(Optional.of(meja));
 
-        // Act
         MejaResponse result = mejaService.getMejaByNomorMeja("A1");
 
-        // Assert
         assertNotNull(result);
         assertEquals(meja.getId(), result.getId());
         assertEquals(meja.getNomorMeja(), result.getNomorMeja());
@@ -279,11 +249,9 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void getMejaByNomorMeja_ThrowsException_WhenNotExists() {
-        // Arrange
+    void testGetMejaByNomorMejaThrowsExceptionWhenNotExists() {
         when(mejaRepository.findByNomorMeja("A1")).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(MejaNotFoundException.class, () -> {
             mejaService.getMejaByNomorMeja("A1");
         });
@@ -292,8 +260,7 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void setMejaStatus_Updates_WhenExists() {
-        // Arrange
+    void testSetMejaStatusUpdatesWhenExists() {
         Meja updatedMeja = Meja.builder()
                 .id(uuid)
                 .nomorMeja("A1")
@@ -303,10 +270,8 @@ class MejaServiceImplTest {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
         when(mejaRepository.save(any(Meja.class))).thenReturn(updatedMeja);
 
-        // Act
         MejaResponse result = mejaService.setMejaStatus(uuid, MejaStatus.TERISI);
 
-        // Assert
         assertNotNull(result);
         assertEquals(MejaStatus.TERISI, result.getStatus());
         
@@ -315,11 +280,9 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void setMejaStatus_ThrowsException_WhenNotExists() {
-        // Arrange
+    void testSetMejaStatusThrowsExceptionWhenNotExists() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(MejaNotFoundException.class, () -> {
             mejaService.setMejaStatus(uuid, MejaStatus.TERISI);
         });
@@ -329,21 +292,17 @@ class MejaServiceImplTest {
     }
 
     @Test
-    void isMejaAvailable_ReturnsTrue_WhenAvailable() {
-        // Arrange
+    void testIsMejaAvailableReturnsTrueWhenAvailable() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
 
-        // Act
         boolean result = mejaService.isMejaAvailable(uuid);
 
-        // Assert
         assertTrue(result);
         verify(mejaRepository).findById(uuid);
     }
 
     @Test
-    void isMejaAvailable_ReturnsFalse_WhenOccupied() {
-        // Arrange
+    void testIsMejaAvailableReturnsFalseWhenOccupied() {
         Meja busyMeja = Meja.builder()
                 .id(uuid)
                 .nomorMeja("A1")
@@ -352,17 +311,14 @@ class MejaServiceImplTest {
         
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(busyMeja));
 
-        // Act
         boolean result = mejaService.isMejaAvailable(uuid);
 
-        // Assert
         assertFalse(result);
         verify(mejaRepository).findById(uuid);
     }
 
     @Test
-    void getAvailableMeja_ReturnsOnlyAvailableMeja() {
-        // Arrange
+    void testGetAvailableMejaReturnsOnlyAvailableMeja() {
         Meja meja2 = Meja.builder()
                 .id(UUID.randomUUID())
                 .nomorMeja("A2")
@@ -371,10 +327,8 @@ class MejaServiceImplTest {
         
         when(mejaRepository.findAll()).thenReturn(Arrays.asList(meja, meja2));
 
-        // Act
         List<MejaResponse> result = mejaService.getAvailableMeja();
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(meja.getId(), result.get(0).getId());

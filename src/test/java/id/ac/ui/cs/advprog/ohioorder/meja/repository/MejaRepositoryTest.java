@@ -21,8 +21,7 @@ class MejaRepositoryTest {
     private MejaRepository mejaRepository;
 
     @Test
-    void testFindByNomorMeja_WhenExists() {
-        // Arrange
+    void testFindByNomorMejaWhenExists() {
         Meja meja = Meja.builder()
                 .nomorMeja("A1")
                 .status(MejaStatus.TERSEDIA)
@@ -31,27 +30,22 @@ class MejaRepositoryTest {
         entityManager.persist(meja);
         entityManager.flush();
 
-        // Act
         Optional<Meja> found = mejaRepository.findByNomorMeja("A1");
 
-        // Assert
         assertTrue(found.isPresent());
         assertEquals(meja.getId(), found.get().getId());
         assertEquals("A1", found.get().getNomorMeja());
     }
 
     @Test
-    void testFindByNomorMeja_WhenNotExists() {
-        // Act
+    void testFindByNomorMejaWhenNotExists() {
         Optional<Meja> found = mejaRepository.findByNomorMeja("NonExistent");
 
-        // Assert
         assertFalse(found.isPresent());
     }
 
     @Test
-    void testExistsByNomorMeja_WhenExists() {
-        // Arrange
+    void testExistsByNomorMejaWhenExists() {
         Meja meja = Meja.builder()
                 .nomorMeja("B2")
                 .status(MejaStatus.TERSEDIA)
@@ -60,35 +54,29 @@ class MejaRepositoryTest {
         entityManager.persist(meja);
         entityManager.flush();
 
-        // Act & Assert
         assertTrue(mejaRepository.existsByNomorMeja("B2"));
     }
 
     @Test
-    void testExistsByNomorMeja_WhenNotExists() {
-        // Act & Assert
+    void testExistsByNomorMejaWhenNotExists() {
         assertFalse(mejaRepository.existsByNomorMeja("NonExistent"));
     }
 
     @Test
     void testSave() {
-        // Arrange
         Meja meja = Meja.builder()
                 .nomorMeja("C3")
                 .status(MejaStatus.TERSEDIA)
                 .build();
 
-        // Act
         Meja savedMeja = mejaRepository.save(meja);
 
-        // Assert
         assertNotNull(savedMeja.getId());
         assertEquals("C3", savedMeja.getNomorMeja());
     }
 
     @Test
     void testDelete() {
-        // Arrange
         Meja meja = Meja.builder()
                 .nomorMeja("D4")
                 .status(MejaStatus.TERSEDIA)
@@ -97,18 +85,15 @@ class MejaRepositoryTest {
         meja = entityManager.persist(meja);
         entityManager.flush();
         
-        // Act
         mejaRepository.delete(meja);
         entityManager.flush();
         
-        // Assert
         Optional<Meja> found = mejaRepository.findById(meja.getId());
         assertFalse(found.isPresent());
     }
 
     @Test
     void testFindAll() {
-        // Arrange
         Meja meja1 = Meja.builder()
                 .nomorMeja("E5")
                 .status(MejaStatus.TERSEDIA)
@@ -123,10 +108,8 @@ class MejaRepositoryTest {
         entityManager.persist(meja2);
         entityManager.flush();
 
-        // Act
         Iterable<Meja> allMeja = mejaRepository.findAll();
 
-        // Assert
         int count = 0;
         for (Meja meja : allMeja) {
             count++;
