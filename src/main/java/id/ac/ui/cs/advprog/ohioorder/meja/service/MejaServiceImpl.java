@@ -84,4 +84,40 @@ public class MejaServiceImpl implements MejaService {
     private MejaResponse mapToMejaResponse(Meja meja) {
         return responseFactory.createFromEntity(meja);
     }
+
+    @Override
+    public MejaResponse getMejaByNomorMeja(String nomorMeja) {
+        Meja meja = mejaRepository.findByNomorMeja(nomorMeja)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan nomor " + nomorMeja + " tidak ditemukan"));
+        
+        return mapToMejaResponse(meja);
+    }
+
+    @Override
+    public MejaResponse setMejaStatus(UUID id, MejaStatus status) {
+        Meja meja = mejaRepository.findById(id)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+        
+        meja.setStatus(status);
+        meja = mejaRepository.save(meja);
+        
+        return mapToMejaResponse(meja);
+    }
+
+    @Override
+    public boolean isMejaAvailable(UUID id) {
+        Meja meja = mejaRepository.findById(id)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+        
+        return meja.isAvailable();
+    }
+
+    @Override
+    public List<MejaResponse> getAvailableMeja() {
+        return mejaRepository.findAll()
+                .stream()
+                .filter(Meja::isAvailable)
+                .map(this::mapToMejaResponse)
+                .collect(Collectors.toList());
+    }
 }
