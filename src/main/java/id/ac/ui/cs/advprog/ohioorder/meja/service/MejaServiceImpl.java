@@ -9,6 +9,7 @@ import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
+import id.ac.ui.cs.advprog.ohioorder.meja.validation.MejaRequestValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,12 +22,11 @@ import java.util.stream.Collectors;
 public class MejaServiceImpl implements MejaService {
 
     private final MejaRepository mejaRepository;
+    private final MejaRequestValidator validator;
 
     @Override
     public MejaResponse createMeja(MejaRequest request) {
-        if (mejaRepository.existsByNomorMeja(request.getNomorMeja())) {
-            throw new MejaAlreadyExistsException("Meja dengan nomor " + request.getNomorMeja() + " sudah ada");
-        }
+        validator.validate(request);
 
         Meja meja = Meja.builder()
                 .nomorMeja(request.getNomorMeja())
@@ -59,14 +59,8 @@ public class MejaServiceImpl implements MejaService {
         Meja meja = mejaRepository.findById(id)
                 .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
         
-        mejaRepository.findByNomorMeja(request.getNomorMeja())
-                .ifPresent(existingMeja -> {
-                    if (!existingMeja.getId().equals(id)) {
-                        throw new MejaAlreadyExistsException("Meja dengan nomor " + request.getNomorMeja() + " sudah ada");
-                    }
-                });
+        validator.validateForUpdate(request, meja.getNomorMeja());
         
-        // Update table
         meja.setNomorMeja(request.getNomorMeja());
         meja = mejaRepository.save(meja);
         
