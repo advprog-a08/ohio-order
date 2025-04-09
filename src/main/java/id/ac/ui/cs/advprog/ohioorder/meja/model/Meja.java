@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
+
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.meja.model;
 
-import id.ac.ui.cs.advprog.ohioorder.enums.MejaStatus;
+import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
