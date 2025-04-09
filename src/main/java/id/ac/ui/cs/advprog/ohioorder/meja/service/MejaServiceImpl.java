@@ -1,0 +1,95 @@
+package id.ac.ui.cs.advprog.ohioorder.meja.service;
+
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
+import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
+import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaAlreadyExistsException;
+import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
+import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
+import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
+import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
+import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class MejaServiceImpl implements MejaService {
+
+    private final MejaRepository mejaRepository;
+
+    @Override
+    public MejaResponse createMeja(MejaRequest request) {
+        if (mejaRepository.existsByNomorMeja(request.getNomorMeja())) {
+            throw new MejaAlreadyExistsException("Meja dengan nomor " + request.getNomorMeja() + " sudah ada");
+        }
+
+        Meja meja = Meja.builder()
+                .nomorMeja(request.getNomorMeja())
+                .status(MejaStatus.TERSEDIA)
+                .build();
+
+        meja = mejaRepository.save(meja);
+
+        return mapToMejaResponse(meja);
+    }
+
+    @Override
+    public List<MejaResponse> getAllMeja() {
+        return mejaRepository.findAll()
+                .stream()
+                .map(this::mapToMejaResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public MejaResponse getMejaById(UUID id) {
+        Meja meja = mejaRepository.findById(id)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+        
+        return mapToMejaResponse(meja);
+    }
+
+    @Override
+    public MejaResponse updateMeja(UUID id, MejaRequest request) {
+        Meja meja = mejaRepository.findById(id)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+        
+        mejaRepository.findByNomorMeja(request.getNomorMeja())
+                .ifPresent(existingMeja -> {
+                    if (!existingMeja.getId().equals(id)) {
+                        throw new MejaAlreadyExistsException("Meja dengan nomor " + request.getNomorMeja() + " sudah ada");
+                    }
+                });
+        
+        // Update table
+        meja.setNomorMeja(request.getNomorMeja());
+        meja = mejaRepository.save(meja);
+        
+        return mapToMejaResponse(meja);
+    }
+
+    @Override
+    public void deleteMeja(UUID id) {
+        Meja meja = mejaRepository.findById(id)
+                .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+
+        if (meja.getStatus() == MejaStatus.TERISI) {
+            throw new MejaHasPesananException("Meja tidak dapat dihapus karena sedang memiliki pesanan aktif");
+        }
+        
+        mejaRepository.delete(meja);
+    }
+    
+    private MejaResponse mapToMejaResponse(Meja meja) {
+        return MejaResponse.builder()
+                .id(meja.getId())
+                .nomorMeja(meja.getNomorMeja())
+                .status(meja.getStatus())
+                .build();
+    }
+}
