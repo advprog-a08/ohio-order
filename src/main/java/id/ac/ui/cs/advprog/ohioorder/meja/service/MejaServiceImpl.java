@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaAlreadyExistsException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
+import id.ac.ui.cs.advprog.ohioorder.meja.factory.MejaResponseFactory;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
@@ -23,6 +24,7 @@ public class MejaServiceImpl implements MejaService {
 
     private final MejaRepository mejaRepository;
     private final MejaRequestValidator validator;
+    private final MejaResponseFactory responseFactory;
 
     @Override
     public MejaResponse createMeja(MejaRequest request) {
@@ -78,12 +80,8 @@ public class MejaServiceImpl implements MejaService {
         
         mejaRepository.delete(meja);
     }
-    
+
     private MejaResponse mapToMejaResponse(Meja meja) {
-        return MejaResponse.builder()
-                .id(meja.getId())
-                .nomorMeja(meja.getNomorMeja())
-                .status(meja.getStatus())
-                .build();
+        return responseFactory.createFromEntity(meja);
     }
 }
