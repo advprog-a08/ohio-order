@@ -8,7 +8,7 @@ import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
-import id.ac.ui.cs.advprog.ohioorder.meja.service.impl.MejaServiceImpl;
+import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
