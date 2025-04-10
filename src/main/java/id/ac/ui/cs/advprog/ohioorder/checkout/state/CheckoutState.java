@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
+import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
+
 public interface CheckoutState {
-    void checkout() throws Exception;
+    void next(Checkout checkout);
 }
