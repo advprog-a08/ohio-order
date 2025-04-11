@@ -1,16 +1,16 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
-public class DraftState implements CheckoutState {
-    private static DraftState INSTANCE;
-    private DraftState() {}
+public class PreparingState implements CheckoutState {
+    private static PreparingState INSTANCE;
+    private PreparingState() {}
 
-    public static DraftState getInstance() {
+    public static PreparingState getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new DraftState();
+            INSTANCE = new PreparingState();
         }
 
         return INSTANCE;
@@ -18,11 +18,11 @@ public class DraftState implements CheckoutState {
 
     @Override
     public void next(Checkout checkout) throws InvalidStateTransitionException {
-        checkout.setState(CheckoutStateType.ORDERED);
+        checkout.setState(CheckoutStateType.READY);
     }
 
     @Override
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
-        checkout.setState(CheckoutStateType.CANCELLED);
+        throw new InvalidStateTransitionException("Cannot cancel order in preparing state");
     }
 }
