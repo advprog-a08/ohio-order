@@ -1,7 +1,8 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,13 +22,11 @@ public class CompletedStateTest {
 
     @Test
     void testNextTransitionNoChange() {
-        state.next(checkout);
-        assertEquals(CheckoutStateType.COMPLETED, checkout.getState());
+        assertThrows(InvalidStateTransitionException.class, () -> state.next(checkout));
     }
 
     @Test
     void testCancelTransitionNoChange() {
-        state.cancel(checkout);
-        assertEquals(CheckoutStateType.COMPLETED, checkout.getState());
+        assertThrows(InvalidStateTransitionException.class, () -> state.cancel(checkout));
     }
 }
