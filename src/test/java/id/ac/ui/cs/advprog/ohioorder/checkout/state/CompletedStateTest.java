@@ -15,7 +15,7 @@ public class CompletedStateTest {
 
     @BeforeEach
     void setUp() {
-        state = new CompletedState();
+        state = CompletedState.getInstance();
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.COMPLETED);
     }

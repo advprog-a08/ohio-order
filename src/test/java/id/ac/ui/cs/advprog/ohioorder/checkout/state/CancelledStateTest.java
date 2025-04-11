@@ -14,7 +14,7 @@ public class CancelledStateTest {
 
     @BeforeEach
     void setUp() {
-        state = new CancelledState();
+        state = CancelledState.getInstance();
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.CANCELLED);
     }

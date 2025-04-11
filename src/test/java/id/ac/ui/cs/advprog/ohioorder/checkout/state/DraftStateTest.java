@@ -14,7 +14,7 @@ public class DraftStateTest {
 
     @BeforeEach
     void setUp() {
-        state = new DraftState();
+        state = DraftState.getInstance();
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.DRAFT);
     }
