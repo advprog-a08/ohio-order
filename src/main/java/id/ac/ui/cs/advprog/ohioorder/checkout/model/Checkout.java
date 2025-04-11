@@ -33,4 +33,12 @@ public class Checkout {
     public void initializeState() {
         this.checkoutState = CheckoutStateMachine.getStateForStatus(state);
     }
+
+    public void nextState() {
+        checkoutState.next(this);
+    }
+
+    public void cancel() {
+        checkoutState.cancel(this);
+    }
 }
