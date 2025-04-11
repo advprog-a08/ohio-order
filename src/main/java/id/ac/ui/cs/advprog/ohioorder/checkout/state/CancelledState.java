@@ -1,12 +1,10 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
+import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import org.springframework.stereotype.Component;
 
-import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
-
 @Component
-public class CompletedState implements CheckoutState {
+public class CancelledState implements CheckoutState {
     @Override
     public void next(Checkout checkout) {
     }

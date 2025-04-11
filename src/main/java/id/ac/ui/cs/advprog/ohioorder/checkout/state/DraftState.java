@@ -11,4 +11,9 @@ public class DraftState implements CheckoutState {
     public void next(Checkout checkout) {
         checkout.setState(CheckoutStateType.COMPLETED);
     }
+
+    @Override
+    public void cancel(Checkout checkout) {
+        checkout.setState(CheckoutStateType.CANCELLED);
+    }
 }
