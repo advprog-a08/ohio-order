@@ -9,23 +9,22 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CancelledStateTest {
-    private CheckoutState state;
     private Checkout checkout;
 
     @BeforeEach
     void setUp() {
-        state = CancelledState.getInstance();
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.CANCELLED);
+        checkout.initializeState();
     }
 
     @Test
     void testNextTransitionToCompleted() {
-        assertThrows(InvalidStateTransitionException.class, () -> state.next(checkout));
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.nextState());
     }
 
     @Test
     void testCancelTransitionToCancelled() {
-        assertThrows(InvalidStateTransitionException.class, () -> state.cancel(checkout));
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
     }
 }

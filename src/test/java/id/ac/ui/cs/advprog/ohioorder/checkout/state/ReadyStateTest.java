@@ -10,24 +10,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ReadyStateTest {
-    private CheckoutState state;
     private Checkout checkout;
 
     @BeforeEach
     void setUp() {
-        state = ReadyState.getInstance();
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.READY);
+        checkout.initializeState();
     }
 
     @Test
     void testNextTransitionToCompleted() {
-        state.next(checkout);
+        checkout.nextState();
         assertEquals(CheckoutStateType.COMPLETED, checkout.getState());
     }
 
     @Test
     void testCancelTransitionToCancelled() {
-        assertThrows(InvalidStateTransitionException.class, () -> state.cancel(checkout));
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
     }
 }
