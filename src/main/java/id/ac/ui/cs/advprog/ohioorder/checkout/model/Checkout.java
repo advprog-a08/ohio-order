@@ -3,12 +3,10 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.model;
 import java.util.UUID;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
+import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
+import id.ac.ui.cs.advprog.ohioorder.checkout.utils.CheckoutStateMachine;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,4 +20,17 @@ public class Checkout {
 
     @Enumerated(EnumType.STRING)
     private CheckoutStateType state;
+
+    @Transient
+    private CheckoutState checkoutState;
+
+    public Checkout() {
+        this.state = CheckoutStateType.DRAFT;
+        this.checkoutState = DraftState.getInstance();
+    }
+
+    @PostLoad
+    public void initializeState() {
+        this.checkoutState = CheckoutStateMachine.getStateForStatus(state);
+    }
 }
