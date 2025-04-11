@@ -1,28 +1,27 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
+import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
-import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DraftStateTest {
+public class CancelledStateTest {
     private CheckoutState state;
     private Checkout checkout;
 
     @BeforeEach
     void setUp() {
-        state = new DraftState();
+        state = new CancelledState();
         checkout = new Checkout();
-        checkout.setState(CheckoutStateType.DRAFT);
+        checkout.setState(CheckoutStateType.CANCELLED);
     }
 
     @Test
     void testNextTransitionToCompleted() {
         state.next(checkout);
-        assertEquals(CheckoutStateType.COMPLETED, checkout.getState());
+        assertEquals(CheckoutStateType.CANCELLED, checkout.getState());
     }
 
     @Test
