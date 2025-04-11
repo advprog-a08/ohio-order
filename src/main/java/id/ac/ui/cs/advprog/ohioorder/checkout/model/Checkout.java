@@ -5,7 +5,6 @@ import java.util.UUID;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
-import id.ac.ui.cs.advprog.ohioorder.checkout.utils.CheckoutStateMachine;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,7 +30,7 @@ public class Checkout {
 
     @PostLoad
     public void initializeState() {
-        this.checkoutState = CheckoutStateMachine.getStateForStatus(state);
+        this.checkoutState = state.getCheckoutState();
     }
 
     public void nextState() {
