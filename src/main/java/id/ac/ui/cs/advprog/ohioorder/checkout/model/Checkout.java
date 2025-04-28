@@ -33,6 +33,11 @@ public class Checkout {
         this.checkoutState = state.getCheckoutState();
     }
 
+    public void setState(CheckoutStateType state) {
+        this.state = state;
+        this.initializeState();
+    }
+
     public void nextState() {
         checkoutState.next(this);
     }
