@@ -23,6 +23,7 @@ public class OrderedStateTest {
     void testNextTransitionToCompleted() {
         checkout.nextState();
         assertEquals(CheckoutStateType.PREPARING, checkout.getState());
+        assertEquals(checkout.getCheckoutState(), PreparingState.getInstance());
     }
 
     @Test

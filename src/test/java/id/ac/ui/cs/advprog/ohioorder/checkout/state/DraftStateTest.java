@@ -22,6 +22,7 @@ public class DraftStateTest {
     void testNextTransitionToCompleted() {
         checkout.nextState();
         assertEquals(CheckoutStateType.ORDERED, checkout.getState());
+        assertEquals(checkout.getCheckoutState(), OrderedState.getInstance());
     }
 
     @Test

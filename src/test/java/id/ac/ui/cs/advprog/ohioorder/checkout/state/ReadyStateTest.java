@@ -23,6 +23,7 @@ public class ReadyStateTest {
     void testNextTransitionToCompleted() {
         checkout.nextState();
         assertEquals(CheckoutStateType.COMPLETED, checkout.getState());
+        assertEquals(checkout.getCheckoutState(), CompletedState.getInstance());
     }
 
     @Test
