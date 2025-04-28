@@ -5,14 +5,10 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionEx
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
 public class ReadyState implements CheckoutState {
-    private static ReadyState INSTANCE;
+    private static final ReadyState INSTANCE = new ReadyState();
     private ReadyState() {}
 
     public static ReadyState getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new ReadyState();
-        }
-
         return INSTANCE;
     }
 

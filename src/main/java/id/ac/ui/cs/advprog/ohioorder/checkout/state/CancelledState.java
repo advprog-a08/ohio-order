@@ -4,14 +4,10 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionEx
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
 public class CancelledState implements CheckoutState {
-    private static CancelledState INSTANCE;
+    private static final CancelledState INSTANCE = new CancelledState();
     private CancelledState() {}
 
     public static CancelledState getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new CancelledState();
-        }
-
         return INSTANCE;
     }
 

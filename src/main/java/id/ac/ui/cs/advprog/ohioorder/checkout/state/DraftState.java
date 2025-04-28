@@ -5,14 +5,10 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
 public class DraftState implements CheckoutState {
-    private static DraftState INSTANCE;
+    private static final DraftState INSTANCE = new DraftState();
     private DraftState() {}
 
     public static DraftState getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new DraftState();
-        }
-
         return INSTANCE;
     }
 

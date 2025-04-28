@@ -4,14 +4,10 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionEx
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
 public class CompletedState implements CheckoutState {
-    private static CompletedState INSTANCE;
+    private static final CompletedState INSTANCE = new CompletedState();
     private CompletedState() {}
 
     public static CompletedState getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new CompletedState();
-        }
-
         return INSTANCE;
     }
 
