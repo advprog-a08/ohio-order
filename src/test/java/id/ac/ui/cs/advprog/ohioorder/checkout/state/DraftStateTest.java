@@ -1,12 +1,12 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DraftStateTest {
     private Checkout checkout;
@@ -29,5 +29,10 @@ public class DraftStateTest {
     void testCancelTransitionToCancelled() {
         checkout.cancel();
         assertEquals(CheckoutStateType.CANCELLED, checkout.getState());
+    }
+
+    @Test
+    void testUpdateAccepted() {
+        assertDoesNotThrow(() -> checkout.update());
     }
 }
