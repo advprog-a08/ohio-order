@@ -42,6 +42,10 @@ public class Checkout {
         checkoutState.next(this);
     }
 
+    public void update() {
+        checkoutState.update();
+    }
+
     public void cancel() {
         checkoutState.cancel(this);
     }

@@ -21,4 +21,9 @@ public class DraftState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         checkout.setState(CheckoutStateType.CANCELLED);
     }
+
+    @Override
+    public void update() throws InvalidStateTransitionException {
+        // not throw3
+    }
 }
