@@ -8,6 +8,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,5 +29,22 @@ public class CheckoutServiceTest {
 
         Checkout created = checkoutService.create();
         assertEquals(checkout.getId(), created.getId());
+    }
+
+    @Test
+    void testFindByIdFound() {
+        UUID id = UUID.randomUUID();
+        Checkout checkout = new Checkout();
+        doReturn(Optional.of(checkout)).when(checkoutRepository).findById(id);
+
+        Optional<Checkout> findById = checkoutService.findById(String.valueOf(id));
+        assertTrue(findById.isPresent());
+        assertEquals(checkout, findById.get());
+    }
+
+    @Test
+    void testFindByIdNotFound() {
+        Optional<Checkout> findById = checkoutService.findById("3f0da82b-6cf4-44bd-bc26-f1303944e662");
+        assertTrue(findById.isEmpty());
     }
 }
