@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface CheckoutService {
     Checkout create();
     Optional<Checkout> findById(String id);
+    void updateById(String id);
 }

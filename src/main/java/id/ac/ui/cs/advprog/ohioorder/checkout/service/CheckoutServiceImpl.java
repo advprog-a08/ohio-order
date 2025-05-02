@@ -24,4 +24,11 @@ public class CheckoutServiceImpl implements CheckoutService {
     public Optional<Checkout> findById(String id) {
         return checkoutRepository.findById(UUID.fromString(id));
     }
+
+    @Override
+    public void updateById(String id) {
+        findById(id).ifPresent(checkout -> {
+           checkout.update();
+        });
+    }
 }
