@@ -47,4 +47,14 @@ public class CheckoutServiceTest {
         Optional<Checkout> findById = checkoutService.findById("3f0da82b-6cf4-44bd-bc26-f1303944e662");
         assertTrue(findById.isEmpty());
     }
+
+    @Test
+    void testUpdate() {
+        UUID id = UUID.randomUUID();
+        Checkout checkout = spy(new Checkout());
+        doReturn(Optional.of(checkout)).when(checkoutRepository).findById(id);
+
+        checkoutService.updateById(id.toString());
+        verify(checkout, times(1)).update();
+    }
 }
