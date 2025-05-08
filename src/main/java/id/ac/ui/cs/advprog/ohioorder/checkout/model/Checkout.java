@@ -56,4 +56,8 @@ public class Checkout {
     public void cancel() {
         checkoutState.cancel(this);
     }
+
+    public double calculateTotal() {
+        return order.calculateTotal();
+    }
 }
