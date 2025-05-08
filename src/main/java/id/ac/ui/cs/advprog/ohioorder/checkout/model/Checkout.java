@@ -5,7 +5,9 @@ import java.util.UUID;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,6 +24,11 @@ public class Checkout {
 
     @Transient
     private CheckoutState checkoutState;
+
+    @NotNull
+    @OneToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     public Checkout() {
         this.state = CheckoutStateType.DRAFT;
