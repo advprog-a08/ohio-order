@@ -26,12 +26,6 @@ public class OrderController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<OrderDto.OrderResponse>> getOrdersByUserId(@PathVariable String userId) {
-        List<OrderDto.OrderResponse> responses = orderService.getOrdersByUserId(userId);
-        return ResponseEntity.ok(responses);
-    }
-
     @GetMapping("/table/{MejaId}")
     public ResponseEntity<List<OrderDto.OrderResponse>> getOrdersByMejaId(@PathVariable String MejaId) {
         List<OrderDto.OrderResponse> responses = orderService.getOrdersByMejaId(UUID.fromString(MejaId));
@@ -69,13 +63,6 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{orderId}/status")
-    public ResponseEntity<OrderDto.OrderResponse> updateOrderStatus(
-            @PathVariable String orderId,
-            @Valid @RequestBody OrderDto.UpdateOrderRequest updateRequest) {
-        OrderDto.OrderResponse response = orderService.updateOrderStatus(orderId, updateRequest);
-        return ResponseEntity.ok(response);
-    }
 
     @DeleteMapping("/{orderId}")
     public ResponseEntity<Void> deleteOrder(@PathVariable String orderId) {
