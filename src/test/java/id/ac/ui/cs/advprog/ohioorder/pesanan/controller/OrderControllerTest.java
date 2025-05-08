@@ -1,7 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.pesanan.controller;
 
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ class OrderControllerTest {
     private OrderDto.OrderResponse orderResponse;
     private OrderDto.OrderItemRequest itemRequest;
     private OrderDto.UpdateOrderItemRequest updateItemRequest;
-    private OrderDto.UpdateOrderRequest updateOrderRequest;
 
     @BeforeEach
     void setUp() {
@@ -43,7 +41,6 @@ class OrderControllerTest {
 
         orderRequest = OrderDto.OrderRequest.builder()
                 .mejaId(mejaId)
-                .userId("user-123")
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
@@ -58,8 +55,6 @@ class OrderControllerTest {
                 .id("order-123")
                 .mejaId(mejaId)
                 .nomorMeja("A1")
-                .userId("user-123")
-                .status(OrderStatus.PENDING)
                 .items(List.of(
                         OrderDto.OrderItemResponse.builder()
                                 .id("item-1")
@@ -85,21 +80,14 @@ class OrderControllerTest {
         updateItemRequest = OrderDto.UpdateOrderItemRequest.builder()
                 .quantity(3)
                 .build();
-
-        updateOrderRequest = OrderDto.UpdateOrderRequest.builder()
-                .status(OrderStatus.DELIVERED)
-                .build();
     }
 
     @Test
     void createOrder_Success() {
-        // Arrange
         when(orderService.createOrder(any(OrderDto.OrderRequest.class))).thenReturn(orderResponse);
 
-        // Act
         ResponseEntity<OrderDto.OrderResponse> response = orderController.createOrder(orderRequest);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
@@ -107,49 +95,26 @@ class OrderControllerTest {
     }
 
     @Test
-    void getOrdersByUserId_Success() {
-        // Arrange
-        String userId = "user-123";
-        when(orderService.getOrdersByUserId(userId)).thenReturn(List.of(orderResponse));
-
-        // Act
-        ResponseEntity<List<OrderDto.OrderResponse>> response = orderController.getOrdersByUserId(userId);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-        assertEquals(orderResponse, response.getBody().get(0));
-        verify(orderService).getOrdersByUserId(userId);
-    }
-
-    @Test
     void getOrdersByMejaId_Success() {
-        // Arrange
         String mejaIdStr = mejaId.toString();
         when(orderService.getOrdersByMejaId(mejaId)).thenReturn(List.of(orderResponse));
 
-        // Act
         ResponseEntity<List<OrderDto.OrderResponse>> response = orderController.getOrdersByMejaId(mejaIdStr);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
-        assertEquals(orderResponse, response.getBody().get(0));
+        assertEquals(orderResponse, response.getBody().getFirst());
         verify(orderService).getOrdersByMejaId(mejaId);
     }
 
     @Test
     void getOrderById_Success() {
-        // Arrange
         String orderId = "order-123";
         when(orderService.getOrderById(orderId)).thenReturn(orderResponse);
 
-        // Act
         ResponseEntity<OrderDto.OrderResponse> response = orderController.getOrderById(orderId);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
@@ -158,14 +123,11 @@ class OrderControllerTest {
 
     @Test
     void addItemToOrder_Success() {
-        // Arrange
         String orderId = "order-123";
         when(orderService.addItemToOrder(eq(orderId), any(OrderDto.OrderItemRequest.class))).thenReturn(orderResponse);
 
-        // Act
         ResponseEntity<OrderDto.OrderResponse> response = orderController.addItemToOrder(orderId, itemRequest);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
@@ -174,16 +136,13 @@ class OrderControllerTest {
 
     @Test
     void updateOrderItem_Success() {
-        // Arrange
         String orderId = "order-123";
         String itemId = "item-1";
         when(orderService.updateOrderItem(eq(orderId), eq(itemId), any(OrderDto.UpdateOrderItemRequest.class)))
                 .thenReturn(orderResponse);
 
-        // Act
         ResponseEntity<OrderDto.OrderResponse> response = orderController.updateOrderItem(orderId, itemId, updateItemRequest);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
@@ -192,15 +151,12 @@ class OrderControllerTest {
 
     @Test
     void removeItemFromOrder_Success() {
-        // Arrange
         String orderId = "order-123";
         String itemId = "item-1";
         when(orderService.removeItemFromOrder(orderId, itemId)).thenReturn(orderResponse);
 
-        // Act
         ResponseEntity<OrderDto.OrderResponse> response = orderController.removeItemFromOrder(orderId, itemId);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
@@ -208,31 +164,12 @@ class OrderControllerTest {
     }
 
     @Test
-    void updateOrderStatus_Success() {
-        // Arrange
-        String orderId = "order-123";
-        when(orderService.updateOrderStatus(eq(orderId), any(OrderDto.UpdateOrderRequest.class))).thenReturn(orderResponse);
-
-        // Act
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.updateOrderStatus(orderId, updateOrderRequest);
-
-        // Assert
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(orderResponse, response.getBody());
-        verify(orderService).updateOrderStatus(orderId, updateOrderRequest);
-    }
-
-    @Test
     void deleteOrder_Success() {
-        // Arrange
         String orderId = "order-123";
         doNothing().when(orderService).deleteOrder(orderId);
 
-        // Act
         ResponseEntity<Void> response = orderController.deleteOrder(orderId);
 
-        // Assert
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         assertNull(response.getBody());
