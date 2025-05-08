@@ -29,7 +29,6 @@ public class OrderMapper {
                 .build();
 
         Order order = Order.builder()
-                .userId(orderRequest.getUserId())
                 .meja(meja)
                 .build();
 
@@ -64,11 +63,9 @@ public class OrderMapper {
                 .id(order.getId())
                 .mejaId(order.getMeja().getId())
                 .nomorMeja(order.getMeja().getNomorMeja())
-                .userId(order.getUserId())
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
-                .status(order.getStatus())
                 .total(order.calculateTotal())
                 .build();
     }
