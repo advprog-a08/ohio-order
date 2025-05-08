@@ -27,7 +27,6 @@ class OrderItemTest {
 
     @Test
     void gettersAndSetters_WorkCorrectly() {
-        // Act & Assert
         assertEquals("item-1", orderItem.getId());
         assertEquals("menu-1", orderItem.getMenuItemId());
         assertEquals("Burger", orderItem.getMenuItemName());
@@ -35,7 +34,6 @@ class OrderItemTest {
         assertEquals(2, orderItem.getQuantity());
         assertEquals(order, orderItem.getOrder());
 
-        // Test setters
         Order newOrder = new Order();
         newOrder.setId("order-456");
 
@@ -56,7 +54,6 @@ class OrderItemTest {
 
     @Test
     void builderPattern_CreatesOrderItemCorrectly() {
-        // Arrange & Act
         OrderItem builtItem = OrderItem.builder()
                 .id("item-test")
                 .menuItemId("menu-test")
@@ -66,7 +63,6 @@ class OrderItemTest {
                 .order(order)
                 .build();
 
-        // Assert
         assertEquals("item-test", builtItem.getId());
         assertEquals("menu-test", builtItem.getMenuItemId());
         assertEquals("Test Food", builtItem.getMenuItemName());
@@ -77,10 +73,8 @@ class OrderItemTest {
 
     @Test
     void noArgsConstructor_CreatesEmptyOrderItem() {
-        // Arrange & Act
         OrderItem emptyItem = new OrderItem();
 
-        // Assert
         assertNull(emptyItem.getId());
         assertNull(emptyItem.getMenuItemId());
         assertNull(emptyItem.getMenuItemName());
@@ -91,7 +85,6 @@ class OrderItemTest {
 
     @Test
     void allArgsConstructor_CreatesFullOrderItem() {
-        // Arrange & Act
         OrderItem fullItem = new OrderItem(
                 "item-full",
                 "menu-full",
@@ -101,7 +94,6 @@ class OrderItemTest {
                 order
         );
 
-        // Assert
         assertEquals("item-full", fullItem.getId());
         assertEquals("menu-full", fullItem.getMenuItemId());
         assertEquals("Full Item", fullItem.getMenuItemName());
