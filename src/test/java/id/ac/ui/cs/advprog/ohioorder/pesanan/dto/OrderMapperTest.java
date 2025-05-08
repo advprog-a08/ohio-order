@@ -4,8 +4,6 @@ import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +55,6 @@ class OrderMapperTest {
 
         orderRequest = OrderDto.OrderRequest.builder()
                 .mejaId(mejaId)
-                .userId("user-123")
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
@@ -78,10 +75,8 @@ class OrderMapperTest {
 
         order = Order.builder()
                 .id("order-123")
-                .userId("user-123")
                 .meja(meja)
                 .orderItems(new ArrayList<>(List.of(orderItem)))
-                .status(OrderStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -91,15 +86,11 @@ class OrderMapperTest {
 
     @Test
     void toEntity_Success() {
-        // Arrange
         when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
 
-        // Act
         Order result = orderMapper.toEntity(orderRequest);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(orderRequest.getUserId(), result.getUserId());
         assertEquals(mejaId, result.getMeja().getId());
         assertEquals("A1", result.getMeja().getNomorMeja());
         assertEquals(MejaStatus.TERSEDIA, result.getMeja().getStatus());
@@ -107,7 +98,7 @@ class OrderMapperTest {
         assertNotNull(result.getOrderItems());
         assertEquals(1, result.getOrderItems().size());
 
-        OrderItem resultItem = result.getOrderItems().get(0);
+        OrderItem resultItem = result.getOrderItems().getFirst();
         assertEquals("menu-1", resultItem.getMenuItemId());
         assertEquals("Burger", resultItem.getMenuItemName());
         assertEquals(50000.0, resultItem.getPrice());
@@ -116,32 +107,24 @@ class OrderMapperTest {
 
     @Test
     void toEntity_WithNullItems_Success() {
-        // Arrange
         orderRequest.setItems(null);
         when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
 
-        // Act
         Order result = orderMapper.toEntity(orderRequest);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(orderRequest.getUserId(), result.getUserId());
         assertEquals(mejaId, result.getMeja().getId());
         assertTrue(result.getOrderItems().isEmpty());
     }
 
     @Test
     void toDto_Order_Success() {
-        // Act
         OrderDto.OrderResponse result = orderMapper.toDto(order);
 
-        // Assert
         assertNotNull(result);
         assertEquals(order.getId(), result.getId());
         assertEquals(order.getMeja().getId(), result.getMejaId());
         assertEquals(order.getMeja().getNomorMeja(), result.getNomorMeja());
-        assertEquals(order.getUserId(), result.getUserId());
-        assertEquals(order.getStatus(), result.getStatus());
         assertEquals(order.getCreatedAt(), result.getCreatedAt());
         assertEquals(order.getUpdatedAt(), result.getUpdatedAt());
         assertEquals(100000.0, result.getTotal()); // 50000 * 2
@@ -149,7 +132,7 @@ class OrderMapperTest {
         assertNotNull(result.getItems());
         assertEquals(1, result.getItems().size());
 
-        OrderDto.OrderItemResponse itemResponse = result.getItems().get(0);
+        OrderDto.OrderItemResponse itemResponse = result.getItems().getFirst();
         assertEquals("item-1", itemResponse.getId());
         assertEquals("menu-1", itemResponse.getMenuItemId());
         assertEquals("Burger", itemResponse.getMenuItemName());
@@ -160,10 +143,8 @@ class OrderMapperTest {
 
     @Test
     void toDto_OrderItem_Success() {
-        // Act
         OrderDto.OrderItemResponse result = orderMapper.toDto(orderItem);
 
-        // Assert
         assertNotNull(result);
         assertEquals(orderItem.getId(), result.getId());
         assertEquals(orderItem.getMenuItemId(), result.getMenuItemId());
