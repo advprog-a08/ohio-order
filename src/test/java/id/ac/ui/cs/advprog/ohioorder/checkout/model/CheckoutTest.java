@@ -4,9 +4,11 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CancelledState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CompletedState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 public class CheckoutTest {
@@ -39,5 +41,12 @@ public class CheckoutTest {
         checkout.initializeState();
 
         assertInstanceOf(CancelledState.class, checkout.getCheckoutState());
+    }
+
+    @Test
+    void testSetOrder_setsOrderCorrectly() {
+        Order order = new Order();
+        checkout.setOrder(order);
+        assertEquals(order, checkout.getOrder());
     }
 }
