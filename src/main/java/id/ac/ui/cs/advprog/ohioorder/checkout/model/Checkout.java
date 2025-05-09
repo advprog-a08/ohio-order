@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.model;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
@@ -24,6 +25,7 @@ public class Checkout {
     private CheckoutStateType state;
 
     @Transient
+    @JsonIgnore
     private CheckoutState checkoutState;
 
     @NotNull

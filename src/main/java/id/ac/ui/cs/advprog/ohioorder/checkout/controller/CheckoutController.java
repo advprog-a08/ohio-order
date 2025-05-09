@@ -1,12 +1,11 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/checkout")
@@ -25,11 +24,16 @@ public class CheckoutController {
     }
 
     @DeleteMapping("cancel/{checkoutId}")
-    public ResponseEntity<Checkout> cancel(@PathVariable String checkoutId) {
+    public ResponseEntity<?> cancel(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
-                    checkout.cancel();
-                    checkoutService.save(checkout);
+                    try {
+                        checkout.cancel();
+                        checkoutService.save(checkout);
+                    } catch (InvalidStateTransitionException e) {
+                        return ResponseEntity.badRequest().body(e.getMessage());
+                    }
+
                     return ResponseEntity.ok(checkout);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
