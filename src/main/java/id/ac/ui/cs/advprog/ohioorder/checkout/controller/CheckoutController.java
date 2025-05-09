@@ -23,6 +23,22 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
+    @PostMapping("next/{checkoutId}")
+    public ResponseEntity<?> next(@PathVariable String checkoutId) {
+        return checkoutService.findById(checkoutId)
+                .map(checkout -> {
+                    try {
+                        checkout.nextState();
+                        checkoutService.save(checkout);
+                    } catch (InvalidStateTransitionException e) {
+                        return ResponseEntity.badRequest().body(e.getMessage());
+                    }
+
+                    return ResponseEntity.ok(checkout);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("cancel/{checkoutId}")
     public ResponseEntity<?> cancel(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
