@@ -46,6 +46,17 @@ public class CheckoutServiceTest {
     }
 
     @Test
+    void testCreateOrderNotFound() {
+        String orderId = UUID.randomUUID().toString();
+
+        // Simulate order not found
+        doReturn(Optional.empty()).when(orderRepository).findById(orderId);
+
+        Optional<Checkout> checkout = checkoutService.create(orderId);
+        assertFalse(checkout.isPresent(), "Creating checkout should fail if order does not exist");
+    }
+
+    @Test
     void testFindByIdFound() {
         UUID id = UUID.randomUUID();
         Checkout checkout = new Checkout();
