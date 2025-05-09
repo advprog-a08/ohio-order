@@ -19,6 +19,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         this.orderRepository = orderRepository;
     }
 
+    @Override
+    public Checkout save(Checkout checkout) {
+        return checkoutRepository.save(checkout);
+    }
+
     public Optional<Checkout> create(String orderId) {
         Checkout checkout = new Checkout();
 
