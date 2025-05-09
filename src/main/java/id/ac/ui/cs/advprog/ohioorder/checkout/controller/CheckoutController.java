@@ -26,16 +26,12 @@ public class CheckoutController {
 
     @DeleteMapping("cancel/{checkoutId}")
     public ResponseEntity<Checkout> cancel(@PathVariable String checkoutId) {
-        Optional<Checkout> checkout = checkoutService.findById(checkoutId);
-
-        if (checkout.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Checkout checkout1 = checkout.get();
-        checkout1.cancel();
-        checkoutService.save(checkout1);
-
-        return ResponseEntity.ok(checkout1);
+        return checkoutService.findById(checkoutId)
+                .map(checkout -> {
+                    checkout.cancel();
+                    checkoutService.save(checkout);
+                    return ResponseEntity.ok(checkout);
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
