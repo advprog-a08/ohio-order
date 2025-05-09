@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,6 +16,7 @@ public class CheckoutController {
         this.checkoutService = checkoutService;
     }
 
+    @PostMapping("create")
     public ResponseEntity<Checkout> create(String orderId) {
         return checkoutService.create(orderId)
                 .map(ResponseEntity::ok)
