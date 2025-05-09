@@ -2,6 +2,8 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.service;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.repository.CheckoutRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -10,14 +12,23 @@ import java.util.UUID;
 @Service
 public class CheckoutServiceImpl implements CheckoutService {
     private final CheckoutRepository checkoutRepository;
+    private final OrderRepository orderRepository;
 
-    public CheckoutServiceImpl(CheckoutRepository checkoutRepository) {
+    public CheckoutServiceImpl(CheckoutRepository checkoutRepository, OrderRepository orderRepository) {
         this.checkoutRepository = checkoutRepository;
+        this.orderRepository = orderRepository;
     }
 
-    public Checkout create() {
+    public Optional<Checkout> create(String orderId) {
         Checkout checkout = new Checkout();
-        return checkoutRepository.save(checkout);
+
+        Optional<Order> order = orderRepository.findById(orderId);
+        if (order.isPresent()) {
+            checkout.setOrder(order.get());
+            return Optional.of(checkoutRepository.save(checkout));
+        } else {
+            return Optional.empty();
+        }
     }
 
     @Override
