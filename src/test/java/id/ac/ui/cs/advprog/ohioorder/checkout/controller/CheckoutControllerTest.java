@@ -54,6 +54,32 @@ class CheckoutControllerTest {
     }
 
     @Test
+    void findOne_shouldReturnCheckout_WhenFound() throws Exception {
+        UUID checkoutId = UUID.randomUUID();
+
+        Checkout checkout = new Checkout();
+        checkout.setId(checkoutId);
+        checkout.setState(CheckoutStateType.DRAFT);
+
+        when(checkoutService.findById(checkoutId.toString())).thenReturn(Optional.of(checkout));
+
+        mockMvc.perform(get("/api/checkout/{checkoutId}", checkoutId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(checkoutId.toString()))
+                .andExpect(jsonPath("$.state").value("DRAFT"));
+    }
+
+    @Test
+    void findOne_shouldReturnNotFound_whenNotFound() throws Exception {
+        when(checkoutService.findById(anyString())).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/checkout/xyz789")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void create_shouldReturnCheckout_whenValidOrderId() throws Exception {
         doReturn(Optional.of(mockCheckout)).when(checkoutService).create(validOrderId);
 
