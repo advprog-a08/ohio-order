@@ -1,91 +1,102 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
-import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(MockitoExtension.class)
-public class CheckoutControllerTest {
+@WebMvcTest(controllers = CheckoutController.class)
+@Import(CheckoutControllerTest.TestConfig.class)
+class CheckoutControllerTest {
 
-    @Mock
+    @TestConfiguration
+    static class TestConfig {
+        @Bean
+        public CheckoutService checkoutService() {
+            return mock(CheckoutService.class);
+        }
+    }
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
     private CheckoutService checkoutService;
 
-    @InjectMocks
-    private CheckoutController checkoutController;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Checkout mockCheckout;
-    private final String VALID_ORDER_ID = UUID.randomUUID().toString();
+    private String validOrderId;
 
     @BeforeEach
     void setUp() {
+        validOrderId = UUID.randomUUID().toString();
         mockCheckout = new Checkout();
-        mockCheckout.setId(UUID.fromString(VALID_ORDER_ID));
+        mockCheckout.setId(UUID.fromString(validOrderId));
     }
 
     @Test
-    void returnsCheckoutWhenCreateWithValidOrderId() {
-        doReturn(Optional.of(mockCheckout)).when(checkoutService).create(VALID_ORDER_ID);
+    void create_shouldReturnCheckout_whenValidOrderId() throws Exception {
+        doReturn(Optional.of(mockCheckout)).when(checkoutService).create(validOrderId);
 
-        CheckoutCreateRequest request = CheckoutCreateRequest.builder().orderId(VALID_ORDER_ID).build();
-        ResponseEntity<Checkout> response = checkoutController.create(request);
+        String requestJson = objectMapper.writeValueAsString(CheckoutCreateRequest.builder()
+                .orderId(validOrderId)
+                .build());
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(mockCheckout, response.getBody());
-
-        verify(checkoutService, times(1)).create(VALID_ORDER_ID);
+        mockMvc.perform(post("/api/checkout/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(validOrderId));
     }
 
     @Test
-    void cancel_shouldReturn404_whenCheckoutNotFound() {
+    void cancel_shouldReturn404_whenCheckoutNotFound() throws Exception {
         String orderId = UUID.randomUUID().toString();
         doReturn(Optional.empty()).when(checkoutService).findById(orderId);
 
-        ResponseEntity<Checkout> response = checkoutController.cancel(orderId);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Checkout not found should result in 404");
-        verify(checkoutService, times(1)).findById(orderId);
+        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void cancel_shouldReturn200_whenCheckoutSuccessfullyCanceled() {
+    void cancel_shouldReturn200_whenCheckoutSuccessfullyCanceled() throws Exception {
         String orderId = UUID.randomUUID().toString();
 
         mockCheckout.setState(CheckoutStateType.DRAFT);
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        ResponseEntity<Checkout> response = checkoutController.cancel(orderId);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode(), "Request should succeed by returning a 200 status");
-        assertEquals(CheckoutStateType.CANCELLED, mockCheckout.getState(), "Checkout state should be updated to CANCELLED");
+        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value(CheckoutStateType.CANCELLED.toString()));
     }
 
     @Test
-    void cancel_shouldReturn400_whenCheckoutCannotBeCanceled() {
+    void cancel_shouldReturn400_whenCheckoutAlreadyCancelled() throws Exception {
         String orderId = UUID.randomUUID().toString();
 
-        mockCheckout.setState(CheckoutStateType.CANCELLED); // CANCELLED state cannot be cancelled
+        mockCheckout.setState(CheckoutStateType.CANCELLED);  // Already cancelled
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        assertThrows(InvalidStateTransitionException.class, () -> checkoutController.cancel(orderId));
-
-//        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Request should fail by returning a 400 status");
-//        assertEquals(CheckoutStateType.CANCELLED, mockCheckout.getState(), "Checkout state should not change");
+        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+                .andExpect(status().isBadRequest());
     }
 }
