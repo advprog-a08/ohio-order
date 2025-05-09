@@ -28,6 +28,17 @@ public class CheckoutServiceTest {
     private CheckoutServiceImpl checkoutService;
 
     @Test
+    void testSave() {;
+        Checkout checkout = new Checkout();
+
+        doReturn(checkout).when(checkoutRepository).save(any(Checkout.class));
+
+        checkoutService.save(checkout);
+
+        verify(checkoutRepository, times(1)).save(checkout);
+    }
+
+    @Test
     void testCreate() {
         String orderId = UUID.randomUUID().toString();
         Checkout checkout = new Checkout();
