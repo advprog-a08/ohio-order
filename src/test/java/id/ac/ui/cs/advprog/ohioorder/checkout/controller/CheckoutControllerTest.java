@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,8 @@ public class CheckoutControllerTest {
     void returnsCheckoutWhenCreateWithValidOrderId() {
         doReturn(Optional.of(mockCheckout)).when(checkoutService).create(VALID_ORDER_ID);
 
-        ResponseEntity<Checkout> response = checkoutController.create(VALID_ORDER_ID);
+        CheckoutCreateRequest request = CheckoutCreateRequest.builder().orderId(VALID_ORDER_ID).build();
+        ResponseEntity<Checkout> response = checkoutController.create(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

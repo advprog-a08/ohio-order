@@ -1,9 +1,11 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
+import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,8 +19,8 @@ public class CheckoutController {
     }
 
     @PostMapping("create")
-    public ResponseEntity<Checkout> create(String orderId) {
-        return checkoutService.create(orderId)
+    public ResponseEntity<Checkout> create(@RequestBody CheckoutCreateRequest request) {
+        return checkoutService.create(request.getOrderId())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
