@@ -16,6 +16,13 @@ public class CheckoutController {
         this.checkoutService = checkoutService;
     }
 
+    @GetMapping("{checkoutId}")
+    public ResponseEntity<?> findById(@PathVariable String checkoutId) {
+        return checkoutService.findById(checkoutId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PostMapping("create")
     public ResponseEntity<Checkout> create(@RequestBody CheckoutCreateRequest request) {
         return checkoutService.create(request.getOrderId())

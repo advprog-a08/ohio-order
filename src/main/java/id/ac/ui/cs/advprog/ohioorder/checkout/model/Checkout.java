@@ -31,6 +31,7 @@ public class Checkout {
     @NotNull
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
 
     public Checkout() {
