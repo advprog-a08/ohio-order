@@ -2,6 +2,8 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.service;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.repository.CheckoutRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,16 +21,28 @@ public class CheckoutServiceTest {
     @Mock
     private CheckoutRepository checkoutRepository;
 
+    @Mock
+    private OrderRepository orderRepository;
+
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
 
     @Test
     void testCreate() {
+        String orderId = UUID.randomUUID().toString();
         Checkout checkout = new Checkout();
-        doReturn(checkout).when(checkoutRepository).save(any(Checkout.class));
+        Order order = Order.builder().id(orderId).build();
+        checkout.setOrder(order);
 
-        Checkout created = checkoutService.create();
+        doReturn(checkout).when(checkoutRepository).save(any(Checkout.class));
+        doReturn(Optional.of(order)).when(orderRepository).findById(orderId);
+
+        Checkout created = checkoutService.create(orderId).get();
         assertEquals(checkout.getId(), created.getId());
+        assertNotNull(checkout.getOrder());
+
+        verify(checkoutRepository, times(1)).save(any(Checkout.class));
+        verify(orderRepository, times(1)).findById(orderId);
     }
 
     @Test
