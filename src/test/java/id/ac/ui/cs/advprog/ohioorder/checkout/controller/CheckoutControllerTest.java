@@ -99,4 +99,27 @@ class CheckoutControllerTest {
         mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void next_shouldReturn200_whenNextIsSuccessful() throws Exception {
+        String orderId = UUID.randomUUID().toString();
+
+        mockCheckout.setState(CheckoutStateType.DRAFT);
+        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
+
+        mockMvc.perform(post("/api/checkout/next/{checkoutId}", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()));
+    }
+
+    @Test
+    void next_shouldReturn400_whenNextIsNotSuccessful() throws Exception {
+        String orderId = UUID.randomUUID().toString();
+
+        mockCheckout.setState(CheckoutStateType.CANCELLED);  // Cancelled cannot be next'd
+        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
+
+        mockMvc.perform(post("/api/checkout/next/{checkoutId}", orderId))
+                .andExpect(status().isBadRequest());
+    }
 }
