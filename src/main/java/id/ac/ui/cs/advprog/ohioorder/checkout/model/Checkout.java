@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.model;
 import java.util.UUID;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
@@ -53,7 +54,7 @@ public class Checkout {
         checkoutState.update();
     }
 
-    public void cancel() {
+    public void cancel() throws InvalidStateTransitionException {
         checkoutState.cancel(this);
     }
 
