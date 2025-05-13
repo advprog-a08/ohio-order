@@ -6,7 +6,6 @@ import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderMapper;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderItemRepository;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -37,29 +36,11 @@ public class OrderServiceImpl implements OrderService{
             throw new IllegalStateException("Table is not available for ordering");
         }
 
-        List<Order> existingOrders = orderRepository.findByMejaIdAndStatus(
-                orderRequest.getMejaId(),
-                OrderStatus.PENDING);
-
-        if (!existingOrders.isEmpty()) {
-            throw new IllegalStateException("This table already has a pending order");
-        }
-
         Order order = orderMapper.toEntity(orderRequest);
-
-        // Set the meja as occupied
-        mejaService.setMejaStatus(orderRequest.getMejaId(), MejaStatus.TERISI);
 
         Order savedOrder = orderRepository.save(order);
 
         return orderMapper.toDto(savedOrder);
-    }
-
-    public List<OrderDto.OrderResponse> getOrdersByUserId(String userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
-        return orders.stream()
-                .map(orderMapper::toDto)
-                .collect(Collectors.toList());
     }
 
     public List<OrderDto.OrderResponse> getOrdersByMejaId(UUID mejaId) {
@@ -79,10 +60,6 @@ public class OrderServiceImpl implements OrderService{
     public OrderDto.OrderResponse addItemToOrder(String orderId, OrderDto.OrderItemRequest itemRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() != OrderStatus.PENDING) {
-            throw new IllegalStateException("Cannot add items to an order that is " + order.getStatus());
-        }
 
         OrderItem existingItem = orderItemRepository
                 .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
@@ -111,10 +88,6 @@ public class OrderServiceImpl implements OrderService{
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.getStatus() != OrderStatus.PENDING) {
-            throw new IllegalStateException("Cannot update items in an order that is " + order.getStatus());
-        }
-
         OrderItem itemToUpdate = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
@@ -131,10 +104,6 @@ public class OrderServiceImpl implements OrderService{
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.getStatus() != OrderStatus.PENDING) {
-            throw new IllegalStateException("Cannot remove items from an order that is " + order.getStatus());
-        }
-
         OrderItem itemToRemove = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
@@ -149,34 +118,9 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Transactional
-    public OrderDto.OrderResponse updateOrderStatus(String orderId, OrderDto.UpdateOrderRequest updateRequest) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-
-        if (OrderStatus.DELIVERED.equals(order.getStatus()) || OrderStatus.CANCELLED.equals(order.getStatus())) {
-            throw new IllegalStateException("Cannot update status of an order that is already " + order.getStatus());
-        }
-
-        OrderStatus newStatus = updateRequest.getStatus();
-        order.setStatus(newStatus);
-
-        if (newStatus == OrderStatus.DELIVERED || newStatus == OrderStatus.CANCELLED) {
-            mejaService.setMejaStatus(order.getMeja().getId(), MejaStatus.TERSEDIA);
-        }
-
-        Order updatedOrder = orderRepository.save(order);
-
-        return orderMapper.toDto(updatedOrder);
-    }
-
-    @Transactional
     public void deleteOrder(String orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-
-        if (order.getStatus() == OrderStatus.PENDING) {
-            mejaService.setMejaStatus(order.getMeja().getId(), MejaStatus.TERSEDIA);
-        }
 
         orderRepository.delete(order);
     }

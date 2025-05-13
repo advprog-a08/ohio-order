@@ -9,10 +9,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
@@ -28,9 +26,6 @@ public class Order {
     @Column(columnDefinition = "VARCHAR(36)")
     private String id;
 
-    private String userId;
-
-    // Replace tableNumber with a reference to Meja
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "meja_id", nullable = false)
     private Meja meja;
@@ -42,16 +37,10 @@ public class Order {
 
     private LocalDateTime updatedAt;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = OrderStatus.PENDING;
-        }
     }
 
     @PreUpdate

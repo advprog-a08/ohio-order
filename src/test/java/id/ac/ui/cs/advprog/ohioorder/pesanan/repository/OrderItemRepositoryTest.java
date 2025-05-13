@@ -2,7 +2,6 @@ package id.ac.ui.cs.advprog.ohioorder.pesanan.repository;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,7 +29,6 @@ class OrderItemRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create test data
         Meja meja = Meja.builder()
                 .nomorMeja("A1")
                 .status(MejaStatus.TERISI)
@@ -40,9 +37,7 @@ class OrderItemRepositoryTest {
         entityManager.persistAndFlush(meja);
 
         order = Order.builder()
-                .userId("user-123")
                 .meja(meja)
-                .status(OrderStatus.PENDING)
                 .build();
 
         entityManager.persist(order);
@@ -71,13 +66,11 @@ class OrderItemRepositoryTest {
 
     @Test
     void findByOrderIdAndMenuItemId_ReturnsCorrectItem() {
-        // Act
         Optional<OrderItem> result1 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-1");
         Optional<OrderItem> result2 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-2");
         Optional<OrderItem> result3 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-3");
         Optional<OrderItem> result4 = orderItemRepository.findByOrderIdAndMenuItemId("non-existent", "menu-1");
 
-        // Assert
         assertTrue(result1.isPresent());
         assertEquals(orderItem1, result1.get());
 
@@ -90,12 +83,10 @@ class OrderItemRepositoryTest {
 
     @Test
     void findById_ReturnsCorrectItem() {
-        // Act
         Optional<OrderItem> result1 = orderItemRepository.findById(orderItem1.getId());
         Optional<OrderItem> result2 = orderItemRepository.findById(orderItem2.getId());
         Optional<OrderItem> result3 = orderItemRepository.findById("non-existent");
 
-        // Assert
         assertTrue(result1.isPresent());
         assertEquals(orderItem1, result1.get());
 
@@ -107,7 +98,6 @@ class OrderItemRepositoryTest {
 
     @Test
     void save_CreatesNewOrderItem() {
-        // Arrange
         OrderItem newItem = OrderItem.builder()
                 .menuItemId("menu-3")
                 .menuItemName("Soda")
@@ -116,10 +106,8 @@ class OrderItemRepositoryTest {
                 .order(order)
                 .build();
 
-        // Act
         OrderItem savedItem = orderItemRepository.save(newItem);
 
-        // Assert
         assertNotNull(savedItem.getId());
         assertEquals("menu-3", savedItem.getMenuItemId());
         assertEquals("Soda", savedItem.getMenuItemName());
@@ -127,7 +115,6 @@ class OrderItemRepositoryTest {
         assertEquals(3, savedItem.getQuantity());
         assertEquals(order, savedItem.getOrder());
 
-        // Verify it's in the database
         Optional<OrderItem> retrievedItem = orderItemRepository.findById(savedItem.getId());
         assertTrue(retrievedItem.isPresent());
         assertEquals(savedItem, retrievedItem.get());
@@ -135,15 +122,12 @@ class OrderItemRepositoryTest {
 
     @Test
     void delete_RemovesOrderItem() {
-        // Act
         orderItemRepository.delete(orderItem1);
         entityManager.flush();
 
-        // Assert
         Optional<OrderItem> retrievedItem = orderItemRepository.findById(orderItem1.getId());
         assertTrue(retrievedItem.isEmpty());
 
-        // Verify other items are still there
         Optional<OrderItem> otherItem = orderItemRepository.findById(orderItem2.getId());
         assertTrue(otherItem.isPresent());
     }

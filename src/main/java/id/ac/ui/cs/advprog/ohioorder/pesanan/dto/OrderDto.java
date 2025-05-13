@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.ohioorder.pesanan.dto;
 
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,9 +22,6 @@ public class OrderDto {
     public static class OrderRequest {
         @NotNull(message = "Meja ID is required")
         private UUID mejaId;
-
-        @NotBlank(message = "User ID is required")
-        private String userId;
 
         private List<OrderItemRequest> items;
     }
@@ -59,11 +54,9 @@ public class OrderDto {
         private String id;
         private UUID mejaId;
         private String nomorMeja;
-        private String userId;
         private List<OrderItemResponse> items;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
-        private OrderStatus status;
         private double total;
     }
 
@@ -78,14 +71,6 @@ public class OrderDto {
         private Double price;
         private Integer quantity;
         private Double subtotal;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class UpdateOrderRequest {
-        private OrderStatus status;
     }
 
     @Data
