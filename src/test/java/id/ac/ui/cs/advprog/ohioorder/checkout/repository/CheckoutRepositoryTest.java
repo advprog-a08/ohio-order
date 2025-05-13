@@ -4,7 +4,6 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,9 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-import java.util.ArrayList;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,23 +50,16 @@ public class CheckoutRepositoryTest {
         entityManager.persist(meja2);
 
         order1 = Order.builder()
-                .userId(userId1)
                 .meja(meja1)
-                .status(OrderStatus.PENDING)
                 .build();
 
         order2 = Order.builder()
-                .userId(userId1)
                 .meja(meja2)
-                .status(OrderStatus.DELIVERED)
                 .build();
 
         order3 = Order.builder()
-                .userId(userId2)
                 .meja(meja1)
-                .status(OrderStatus.PENDING)
                 .build();
-
         entityManager.persist(order1);
         entityManager.persist(order2);
         entityManager.persist(order3);

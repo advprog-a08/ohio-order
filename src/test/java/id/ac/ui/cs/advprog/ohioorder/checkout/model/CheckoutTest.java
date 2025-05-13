@@ -6,7 +6,6 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.state.CompletedState;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.enums.OrderStatus;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +33,12 @@ public class CheckoutTest {
                 .status(MejaStatus.TERISI)
                 .build();
 
+        order = Order.builder()
+                .id("order-123")
+                .meja(meja)
+                .orderItems(orderItems)
+                .build();
+
         orderItems.add(OrderItem.builder()
                 .id("item-1")
                 .menuItemId("menu-1")
@@ -49,14 +54,6 @@ public class CheckoutTest {
                 .price(75000.0)
                 .quantity(1)
                 .build());
-
-        order = Order.builder()
-                .id("order-123")
-                .userId("user-123")
-                .meja(meja)
-                .status(OrderStatus.PENDING)
-                .orderItems(orderItems)
-                .build();
 
         checkout = new Checkout();
         checkout.setOrder(order);
@@ -98,6 +95,6 @@ public class CheckoutTest {
         double expected = orderItems.stream()
                         .mapToDouble(item -> item.getPrice() * item.getQuantity())
                         .sum();
-        assertEquals(checkout.calculateTotal(), expected);
+        assertEquals(expected, checkout.calculateTotal());
     }
 }
