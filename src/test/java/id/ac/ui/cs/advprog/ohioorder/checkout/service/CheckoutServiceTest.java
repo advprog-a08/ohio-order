@@ -2,11 +2,16 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.service;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.repository.CheckoutRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,15 +21,76 @@ public class CheckoutServiceTest {
     @Mock
     private CheckoutRepository checkoutRepository;
 
+    @Mock
+    private OrderRepository orderRepository;
+
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
 
     @Test
-    void testCreate() {
+    void testSave() {;
         Checkout checkout = new Checkout();
+
         doReturn(checkout).when(checkoutRepository).save(any(Checkout.class));
 
-        Checkout created = checkoutService.create();
+        checkoutService.save(checkout);
+
+        verify(checkoutRepository, times(1)).save(checkout);
+    }
+
+    @Test
+    void testCreate() {
+        String orderId = UUID.randomUUID().toString();
+        Checkout checkout = new Checkout();
+        Order order = Order.builder().id(orderId).build();
+        checkout.setOrder(order);
+
+        doReturn(checkout).when(checkoutRepository).save(any(Checkout.class));
+        doReturn(Optional.of(order)).when(orderRepository).findById(orderId);
+
+        Checkout created = checkoutService.create(orderId).get();
         assertEquals(checkout.getId(), created.getId());
+        assertNotNull(checkout.getOrder());
+
+        verify(checkoutRepository, times(1)).save(any(Checkout.class));
+        verify(orderRepository, times(1)).findById(orderId);
+    }
+
+    @Test
+    void testCreateOrderNotFound() {
+        String orderId = UUID.randomUUID().toString();
+
+        // Simulate order not found
+        doReturn(Optional.empty()).when(orderRepository).findById(orderId);
+
+        Optional<Checkout> checkout = checkoutService.create(orderId);
+        assertFalse(checkout.isPresent(), "Creating checkout should fail if order does not exist");
+    }
+
+    @Test
+    void testFindByIdFound() {
+        UUID id = UUID.randomUUID();
+        Checkout checkout = new Checkout();
+        doReturn(Optional.of(checkout)).when(checkoutRepository).findById(id);
+
+        Optional<Checkout> findById = checkoutService.findById(String.valueOf(id));
+        assertTrue(findById.isPresent());
+        assertEquals(checkout, findById.get());
+    }
+
+    @Test
+    void testFindByIdNotFound() {
+        Optional<Checkout> findById = checkoutService.findById("3f0da82b-6cf4-44bd-bc26-f1303944e662");
+        assertTrue(findById.isEmpty());
+    }
+
+    @Test
+    void testUpdate() {
+        UUID id = UUID.randomUUID();
+        Checkout checkout = spy(new Checkout());
+        doReturn(Optional.of(checkout)).when(checkoutRepository).findById(id);
+
+        checkoutService.updateById(id.toString());
+        verify(checkout, times(1)).update();
     }
 }
