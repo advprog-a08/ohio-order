@@ -18,13 +18,15 @@ import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 @Table(name = "meja")
 public class Meja {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
     
-    @Column(unique = true, nullable = false)
+    @Column(name = "nomor_meja", unique = true, nullable = false)
     private String nomorMeja;
-    
+
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private MejaStatus status;
     
     public boolean isAvailable() {
