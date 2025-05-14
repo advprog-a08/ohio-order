@@ -91,7 +91,7 @@ class CheckoutControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validOrderId));
+                .andExpect(jsonPath("$.id").value(validOrderId.toString()));
     }
 
     @Test
