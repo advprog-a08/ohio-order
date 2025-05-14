@@ -33,14 +33,14 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDto.OrderResponse> getOrderById(@PathVariable String orderId) {
+    public ResponseEntity<OrderDto.OrderResponse> getOrderById(@PathVariable UUID orderId) {
         OrderDto.OrderResponse response = orderService.getOrderById(orderId);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{orderId}/items")
     public ResponseEntity<OrderDto.OrderResponse> addItemToOrder(
-            @PathVariable String orderId,
+            @PathVariable UUID orderId,
             @Valid @RequestBody OrderDto.OrderItemRequest itemRequest) {
         OrderDto.OrderResponse response = orderService.addItemToOrder(orderId, itemRequest);
         return ResponseEntity.ok(response);
@@ -48,8 +48,8 @@ public class OrderController {
 
     @PutMapping("/{orderId}/items/{itemId}")
     public ResponseEntity<OrderDto.OrderResponse> updateOrderItem(
-            @PathVariable String orderId,
-            @PathVariable String itemId,
+            @PathVariable UUID orderId,
+            @PathVariable UUID itemId,
             @Valid @RequestBody OrderDto.UpdateOrderItemRequest updateRequest) {
         OrderDto.OrderResponse response = orderService.updateOrderItem(orderId, itemId, updateRequest);
         return ResponseEntity.ok(response);
@@ -57,15 +57,15 @@ public class OrderController {
 
     @DeleteMapping("/{orderId}/items/{itemId}")
     public ResponseEntity<OrderDto.OrderResponse> removeItemFromOrder(
-            @PathVariable String orderId,
-            @PathVariable String itemId) {
+            @PathVariable UUID orderId,
+            @PathVariable UUID itemId) {
         OrderDto.OrderResponse response = orderService.removeItemFromOrder(orderId, itemId);
         return ResponseEntity.ok(response);
     }
 
 
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable String orderId) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable UUID orderId) {
         orderService.deleteOrder(orderId);
         return ResponseEntity.noContent().build();
     }

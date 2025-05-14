@@ -40,7 +40,7 @@ public class CheckoutServiceTest {
 
     @Test
     void testCreate() {
-        String orderId = UUID.randomUUID().toString();
+        UUID orderId = UUID.randomUUID();
         Checkout checkout = new Checkout();
         Order order = Order.builder().id(orderId).build();
         checkout.setOrder(order);
@@ -58,7 +58,7 @@ public class CheckoutServiceTest {
 
     @Test
     void testCreateOrderNotFound() {
-        String orderId = UUID.randomUUID().toString();
+        UUID orderId = UUID.randomUUID();
 
         // Simulate order not found
         doReturn(Optional.empty()).when(orderRepository).findById(orderId);

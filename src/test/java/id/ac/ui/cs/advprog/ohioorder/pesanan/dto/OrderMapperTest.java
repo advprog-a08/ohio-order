@@ -33,7 +33,9 @@ class OrderMapperTest {
     private UUID mejaId;
     private OrderDto.OrderRequest orderRequest;
     private Order order;
+    private UUID orderId;
     private OrderItem orderItem;
+    private UUID orderItemId;
     private Meja meja;
     private MejaResponse mejaResponse;
 
@@ -65,16 +67,18 @@ class OrderMapperTest {
                 ))
                 .build();
 
+        orderItemId = UUID.randomUUID();
         orderItem = OrderItem.builder()
-                .id("item-1")
+                .id(orderItemId)
                 .menuItemId("menu-1")
                 .menuItemName("Burger")
                 .price(50000.0)
                 .quantity(2)
                 .build();
 
+        orderId = UUID.randomUUID();
         order = Order.builder()
-                .id("order-123")
+                .id(orderId)
                 .meja(meja)
                 .orderItems(new ArrayList<>(List.of(orderItem)))
                 .createdAt(LocalDateTime.now())
@@ -133,7 +137,7 @@ class OrderMapperTest {
         assertEquals(1, result.getItems().size());
 
         OrderDto.OrderItemResponse itemResponse = result.getItems().getFirst();
-        assertEquals("item-1", itemResponse.getId());
+        assertEquals(orderItemId, itemResponse.getId());
         assertEquals("menu-1", itemResponse.getMenuItemId());
         assertEquals("Burger", itemResponse.getMenuItemName());
         assertEquals(50000.0, itemResponse.getPrice());

@@ -1,31 +1,38 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.dto;
 
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CheckoutCreateRequestTest {
 
     @Test
     void testBuilderCreatesObjectCorrectly() {
+        UUID orderId = UUID.randomUUID();
         CheckoutCreateRequest request = CheckoutCreateRequest.builder()
-                .orderId("ORD-123")
+                .orderId(orderId)
                 .build();
 
         assertNotNull(request);
-        assertEquals("ORD-123", request.getOrderId());
+        assertEquals(orderId, request.getOrderId());
     }
 
     @Test
     void testSetterAndGetter() {
-        CheckoutCreateRequest request = new CheckoutCreateRequest("ORD-456");
+        UUID orderId = UUID.randomUUID();
+        CheckoutCreateRequest request = new CheckoutCreateRequest(orderId);
 
-        assertEquals("ORD-456", request.getOrderId());
+        assertEquals(orderId, request.getOrderId());
     }
 
     @Test
     void testEqualsAndHashCode() {
-        CheckoutCreateRequest r1 = CheckoutCreateRequest.builder().orderId("ORD-789").build();
-        CheckoutCreateRequest r2 = CheckoutCreateRequest.builder().orderId("ORD-789").build();
+        UUID orderId = UUID.randomUUID();
+
+        CheckoutCreateRequest r1 = CheckoutCreateRequest.builder().orderId(orderId).build();
+        CheckoutCreateRequest r2 = CheckoutCreateRequest.builder().orderId(orderId).build();
 
         assertEquals(r1, r2);
         assertEquals(r1.hashCode(), r2.hashCode());

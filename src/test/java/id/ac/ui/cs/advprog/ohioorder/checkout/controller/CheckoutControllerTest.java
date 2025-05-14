@@ -44,13 +44,13 @@ class CheckoutControllerTest {
     private ObjectMapper objectMapper;
 
     private Checkout mockCheckout;
-    private String validOrderId;
+    private UUID validOrderId;
 
     @BeforeEach
     void setUp() {
-        validOrderId = UUID.randomUUID().toString();
+        validOrderId = UUID.randomUUID();
         mockCheckout = new Checkout();
-        mockCheckout.setId(UUID.fromString(validOrderId));
+        mockCheckout.setId(validOrderId);
     }
 
     @Test

@@ -51,7 +51,7 @@ public class OrderDto {
     @AllArgsConstructor
     @Builder
     public static class OrderResponse {
-        private String id;
+        private UUID id;
         private UUID mejaId;
         private String nomorMeja;
         private List<OrderItemResponse> items;
@@ -65,7 +65,7 @@ public class OrderDto {
     @AllArgsConstructor
     @Builder
     public static class OrderItemResponse {
-        private String id;
+        private UUID id;
         private String menuItemId;
         private String menuItemName;
         private Double price;

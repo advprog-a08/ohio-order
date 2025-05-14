@@ -31,7 +31,9 @@ class OrderControllerTest {
 
     private UUID mejaId;
     private OrderDto.OrderRequest orderRequest;
+    private UUID orderResponseId;
     private OrderDto.OrderResponse orderResponse;
+    private UUID orderItemResponseId;
     private OrderDto.OrderItemRequest itemRequest;
     private OrderDto.UpdateOrderItemRequest updateItemRequest;
 
@@ -51,13 +53,15 @@ class OrderControllerTest {
                 ))
                 .build();
 
+        orderResponseId = UUID.randomUUID();
+        orderItemResponseId = UUID.randomUUID();
         orderResponse = OrderDto.OrderResponse.builder()
-                .id("order-123")
+                .id(orderResponseId)
                 .mejaId(mejaId)
                 .nomorMeja("A1")
                 .items(List.of(
                         OrderDto.OrderItemResponse.builder()
-                                .id("item-1")
+                                .id(orderItemResponseId)
                                 .menuItemId("menu-1")
                                 .menuItemName("Burger")
                                 .price(50000.0)
@@ -110,7 +114,8 @@ class OrderControllerTest {
 
     @Test
     void getOrderById_Success() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
+
         when(orderService.getOrderById(orderId)).thenReturn(orderResponse);
 
         ResponseEntity<OrderDto.OrderResponse> response = orderController.getOrderById(orderId);
@@ -123,7 +128,7 @@ class OrderControllerTest {
 
     @Test
     void addItemToOrder_Success() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
         when(orderService.addItemToOrder(eq(orderId), any(OrderDto.OrderItemRequest.class))).thenReturn(orderResponse);
 
         ResponseEntity<OrderDto.OrderResponse> response = orderController.addItemToOrder(orderId, itemRequest);
@@ -136,8 +141,8 @@ class OrderControllerTest {
 
     @Test
     void updateOrderItem_Success() {
-        String orderId = "order-123";
-        String itemId = "item-1";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
         when(orderService.updateOrderItem(eq(orderId), eq(itemId), any(OrderDto.UpdateOrderItemRequest.class)))
                 .thenReturn(orderResponse);
 
@@ -151,8 +156,8 @@ class OrderControllerTest {
 
     @Test
     void removeItemFromOrder_Success() {
-        String orderId = "order-123";
-        String itemId = "item-1";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
         when(orderService.removeItemFromOrder(orderId, itemId)).thenReturn(orderResponse);
 
         ResponseEntity<OrderDto.OrderResponse> response = orderController.removeItemFromOrder(orderId, itemId);
@@ -165,7 +170,7 @@ class OrderControllerTest {
 
     @Test
     void deleteOrder_Success() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
         doNothing().when(orderService).deleteOrder(orderId);
 
         ResponseEntity<Void> response = orderController.deleteOrder(orderId);

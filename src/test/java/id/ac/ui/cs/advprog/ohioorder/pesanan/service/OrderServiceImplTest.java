@@ -44,6 +44,7 @@ class OrderServiceImplTest {
     private OrderServiceImpl orderService;
 
     private UUID mejaId;
+    private UUID orderId;
     private Order order;
     private OrderDto.OrderRequest orderRequest;
     private OrderDto.OrderResponse orderResponse;
@@ -66,8 +67,9 @@ class OrderServiceImplTest {
                 .status(MejaStatus.TERSEDIA)
                 .build();
 
+        orderId = UUID.randomUUID();
         order = Order.builder()
-                .id("order-123")
+                .id(orderId)
                 .meja(meja)
                 .orderItems(new ArrayList<>())
                 .createdAt(LocalDateTime.now())
@@ -87,12 +89,12 @@ class OrderServiceImplTest {
                 .build();
 
         orderResponse = OrderDto.OrderResponse.builder()
-                .id("order-123")
+                .id(orderId)
                 .mejaId(mejaId)
                 .nomorMeja("A1")
                 .items(List.of(
                         OrderDto.OrderItemResponse.builder()
-                                .id("item-1")
+                                .id(UUID.randomUUID())
                                 .menuItemId("menu-1")
                                 .menuItemName("Burger")
                                 .price(50000.0)
@@ -116,7 +118,7 @@ class OrderServiceImplTest {
         OrderDto.OrderResponse result = orderService.createOrder(orderRequest);
 
         assertNotNull(result);
-        assertEquals("order-123", result.getId());
+        assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
         verify(orderRepository).save(order);
     }
@@ -146,13 +148,12 @@ class OrderServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("order-123", result.getFirst().getId());
+        assertEquals(orderId, result.getFirst().getId());
     }
 
     @Test
     void getOrderById_Success() {
-        String orderId = "order-123";
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
 
         OrderDto.OrderResponse result = orderService.getOrderById(orderId);
@@ -163,7 +164,7 @@ class OrderServiceImplTest {
 
     @Test
     void getOrderById_ThrowsException_WhenOrderNotFound() {
-        String orderId = "nonexistent-order";
+        UUID orderId = UUID.randomUUID();
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
@@ -173,7 +174,7 @@ class OrderServiceImplTest {
 
     @Test
     void addItemToOrder_Success_WithNewItem() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
                 .menuItemId("menu-2")
                 .menuItemName("Pizza")
@@ -194,8 +195,9 @@ class OrderServiceImplTest {
 
     @Test
     void addItemToOrder_Success_WithExistingItem() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
         String menuItemId = "menu-1";
+
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
                 .menuItemId(menuItemId)
                 .menuItemName("Burger")
@@ -204,7 +206,7 @@ class OrderServiceImplTest {
                 .build();
 
         OrderItem existingItem = OrderItem.builder()
-                .id("item-1")
+                .id(UUID.randomUUID())
                 .menuItemId(menuItemId)
                 .menuItemName("Burger")
                 .price(50000.0)
@@ -226,8 +228,8 @@ class OrderServiceImplTest {
 
     @Test
     void updateOrderItem_Success() {
-        String orderId = "order-123";
-        String itemId = "item-1";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
         OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
                 .quantity(3)
                 .build();
@@ -255,8 +257,8 @@ class OrderServiceImplTest {
 
     @Test
     void updateOrderItem_ThrowsException_WhenItemNotFound() {
-        String orderId = "order-123";
-        String itemId = "nonexistent-item";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
         OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
                 .quantity(3)
                 .build();
@@ -270,8 +272,8 @@ class OrderServiceImplTest {
 
     @Test
     void removeItemFromOrder_Success() {
-        String orderId = "order-123";
-        String itemId = "item-1";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
 
         OrderItem orderItem = OrderItem.builder()
                 .id(itemId)
@@ -296,8 +298,8 @@ class OrderServiceImplTest {
 
     @Test
     void removeItemFromOrder_ThrowsException_WhenItemNotFound() {
-        String orderId = "order-123";
-        String itemId = "nonexistent-item";
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
@@ -308,7 +310,7 @@ class OrderServiceImplTest {
 
     @Test
     void deleteOrder_Success() {
-        String orderId = "order-123";
+        UUID orderId = UUID.randomUUID();
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         orderService.deleteOrder(orderId);

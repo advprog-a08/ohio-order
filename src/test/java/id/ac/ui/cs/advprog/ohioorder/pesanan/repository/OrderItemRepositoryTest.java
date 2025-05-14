@@ -7,14 +7,21 @@ import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@Testcontainers
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("postgres-testcontainer")
 class OrderItemRepositoryTest {
 
     @Autowired
@@ -69,7 +76,7 @@ class OrderItemRepositoryTest {
         Optional<OrderItem> result1 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-1");
         Optional<OrderItem> result2 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-2");
         Optional<OrderItem> result3 = orderItemRepository.findByOrderIdAndMenuItemId(order.getId(), "menu-3");
-        Optional<OrderItem> result4 = orderItemRepository.findByOrderIdAndMenuItemId("non-existent", "menu-1");
+        Optional<OrderItem> result4 = orderItemRepository.findByOrderIdAndMenuItemId(UUID.randomUUID(), "menu-1");
 
         assertTrue(result1.isPresent());
         assertEquals(orderItem1, result1.get());
@@ -85,7 +92,7 @@ class OrderItemRepositoryTest {
     void findById_ReturnsCorrectItem() {
         Optional<OrderItem> result1 = orderItemRepository.findById(orderItem1.getId());
         Optional<OrderItem> result2 = orderItemRepository.findById(orderItem2.getId());
-        Optional<OrderItem> result3 = orderItemRepository.findById("non-existent");
+        Optional<OrderItem> result3 = orderItemRepository.findById(UUID.randomUUID());
 
         assertTrue(result1.isPresent());
         assertEquals(orderItem1, result1.get());
