@@ -25,3 +25,15 @@ Handles logics of:
 ### Code Diagram
 
 ![image](diagrams/A08_Application_Diagrams_C4_Ohio_Order_Checkout_Code.png)
+
+
+## Orders Feature
+
+### Component Diagram
+
+![image](diagrams/A08_Application_Diagrams_C3_Order_Component.png)
+
+### Code Diagram
+
+![image](diagrams/A08_Application_Diagrams_C4_Ohio_Order_Order_Code.png)
+
