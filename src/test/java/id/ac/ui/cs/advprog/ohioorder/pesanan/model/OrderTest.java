@@ -13,8 +13,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class OrderTest {
 
+    private UUID orderId;
     private Order order;
+    private UUID orderItem1Id;
     private OrderItem orderItem1;
+    private UUID orderItem2Id;
     private OrderItem orderItem2;
     private Meja meja;
 
@@ -26,49 +29,30 @@ class OrderTest {
                 .status(MejaStatus.TERISI)
                 .build();
 
+        orderId = UUID.randomUUID();
         order = Order.builder()
-                .id("order-123")
+                .id(orderId)
                 .meja(meja)
                 .orderItems(new ArrayList<>())
                 .build();
 
+        orderItem1Id = UUID.randomUUID();
         orderItem1 = OrderItem.builder()
-                .id("item-1")
+                .id(orderItem1Id)
                 .menuItemId("menu-1")
                 .menuItemName("Burger")
                 .price(50000.0)
                 .quantity(2)
                 .build();
 
+        orderItem2Id = UUID.randomUUID();
         orderItem2 = OrderItem.builder()
-                .id("item-2")
+                .id(orderItem2Id)
                 .menuItemId("menu-2")
                 .menuItemName("Pizza")
                 .price(75000.0)
                 .quantity(1)
                 .build();
-    }
-
-    @Test
-    void onCreate_SetsDefaultValues() {
-        Order newOrder = new Order();
-
-        newOrder.onCreate();
-
-        assertNotNull(newOrder.getCreatedAt());
-        assertNotNull(newOrder.getUpdatedAt());
-    }
-
-    @Test
-    void onUpdate_UpdatesTimestamp() {
-        LocalDateTime initialUpdatedAt = order.getUpdatedAt();
-
-        order.onUpdate();
-
-        assertNotNull(order.getUpdatedAt());
-        if (initialUpdatedAt != null) {
-            assertNotEquals(initialUpdatedAt, order.getUpdatedAt());
-        }
     }
 
     @Test
@@ -108,12 +92,13 @@ class OrderTest {
 
     @Test
     void builderPattern_CreatesOrderCorrectly() {
+        UUID orderId = UUID.randomUUID();
         Order builtOrder = Order.builder()
-                .id("order-test")
+                .id(orderId)
                 .meja(meja)
                 .build();
 
-        assertEquals("order-test", builtOrder.getId());
+        assertEquals(orderId, builtOrder.getId());
         assertEquals(meja, builtOrder.getMeja());
     }
 }

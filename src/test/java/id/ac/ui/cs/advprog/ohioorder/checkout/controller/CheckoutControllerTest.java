@@ -44,13 +44,13 @@ class CheckoutControllerTest {
     private ObjectMapper objectMapper;
 
     private Checkout mockCheckout;
-    private String validOrderId;
+    private UUID validOrderId;
 
     @BeforeEach
     void setUp() {
-        validOrderId = UUID.randomUUID().toString();
+        validOrderId = UUID.randomUUID();
         mockCheckout = new Checkout();
-        mockCheckout.setId(UUID.fromString(validOrderId));
+        mockCheckout.setId(validOrderId);
     }
 
     @Test
@@ -91,7 +91,7 @@ class CheckoutControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(validOrderId));
+                .andExpect(jsonPath("$.id").value(validOrderId.toString()));
     }
 
     @Test

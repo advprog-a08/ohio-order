@@ -50,14 +50,14 @@ public class OrderServiceImpl implements OrderService{
                 .collect(Collectors.toList());
     }
 
-    public OrderDto.OrderResponse getOrderById(String orderId) {
+    public OrderDto.OrderResponse getOrderById(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
         return orderMapper.toDto(order);
     }
 
     @Transactional
-    public OrderDto.OrderResponse addItemToOrder(String orderId, OrderDto.OrderItemRequest itemRequest) {
+    public OrderDto.OrderResponse addItemToOrder(UUID orderId, OrderDto.OrderItemRequest itemRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
@@ -84,7 +84,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Transactional
-    public OrderDto.OrderResponse updateOrderItem(String orderId, String itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
+    public OrderDto.OrderResponse updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
@@ -100,7 +100,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Transactional
-    public OrderDto.OrderResponse removeItemFromOrder(String orderId, String itemId) {
+    public OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
@@ -118,7 +118,7 @@ public class OrderServiceImpl implements OrderService{
     }
 
     @Transactional
-    public void deleteOrder(String orderId) {
+    public void deleteOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 

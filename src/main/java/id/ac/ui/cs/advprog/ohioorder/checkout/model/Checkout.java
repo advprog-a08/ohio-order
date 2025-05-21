@@ -10,15 +10,16 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
+@Data
+@Builder
+@AllArgsConstructor
 @Entity
-@Getter
-@Setter
+@Table(name = "checkout")
 public class Checkout {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue
     private UUID id; 
 
     @Enumerated(EnumType.STRING)

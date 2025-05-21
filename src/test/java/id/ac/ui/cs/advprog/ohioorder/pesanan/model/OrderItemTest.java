@@ -3,20 +3,26 @@ package id.ac.ui.cs.advprog.ohioorder.pesanan.model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class OrderItemTest {
 
+    private UUID orderItemId;
     private OrderItem orderItem;
+    private UUID orderId;
     private Order order;
 
     @BeforeEach
     void setUp() {
-        order = new Order();
-        order.setId("order-123");
+        orderId = UUID.randomUUID();
+        orderItemId = UUID.randomUUID();
+
+        order = Order.builder().id(orderId).build();
 
         orderItem = OrderItem.builder()
-                .id("item-1")
+                .id(orderItemId)
                 .menuItemId("menu-1")
                 .menuItemName("Burger")
                 .price(50000.0)
@@ -27,24 +33,25 @@ class OrderItemTest {
 
     @Test
     void gettersAndSetters_WorkCorrectly() {
-        assertEquals("item-1", orderItem.getId());
+        assertEquals(orderItemId, orderItem.getId());
         assertEquals("menu-1", orderItem.getMenuItemId());
         assertEquals("Burger", orderItem.getMenuItemName());
         assertEquals(50000.0, orderItem.getPrice());
         assertEquals(2, orderItem.getQuantity());
         assertEquals(order, orderItem.getOrder());
 
-        Order newOrder = new Order();
-        newOrder.setId("order-456");
+        UUID newOrderId = UUID.randomUUID();
+        Order newOrder = Order.builder().id(newOrderId).build();
 
-        orderItem.setId("item-updated");
+        UUID updatedOrderId = UUID.randomUUID();
+        orderItem.setId(updatedOrderId);
         orderItem.setMenuItemId("menu-updated");
         orderItem.setMenuItemName("Updated Burger");
         orderItem.setPrice(60000.0);
         orderItem.setQuantity(3);
         orderItem.setOrder(newOrder);
 
-        assertEquals("item-updated", orderItem.getId());
+        assertEquals(updatedOrderId, orderItem.getId());
         assertEquals("menu-updated", orderItem.getMenuItemId());
         assertEquals("Updated Burger", orderItem.getMenuItemName());
         assertEquals(60000.0, orderItem.getPrice());
@@ -54,8 +61,9 @@ class OrderItemTest {
 
     @Test
     void builderPattern_CreatesOrderItemCorrectly() {
+        UUID itemId = UUID.randomUUID();
         OrderItem builtItem = OrderItem.builder()
-                .id("item-test")
+                .id(itemId)
                 .menuItemId("menu-test")
                 .menuItemName("Test Food")
                 .price(25000.0)
@@ -63,7 +71,7 @@ class OrderItemTest {
                 .order(order)
                 .build();
 
-        assertEquals("item-test", builtItem.getId());
+        assertEquals(itemId, builtItem.getId());
         assertEquals("menu-test", builtItem.getMenuItemId());
         assertEquals("Test Food", builtItem.getMenuItemName());
         assertEquals(25000.0, builtItem.getPrice());
@@ -85,16 +93,17 @@ class OrderItemTest {
 
     @Test
     void allArgsConstructor_CreatesFullOrderItem() {
-        OrderItem fullItem = new OrderItem(
-                "item-full",
-                "menu-full",
-                "Full Item",
-                35000.0,
-                5,
-                order
-        );
+        UUID itemId = UUID.randomUUID();
+        OrderItem fullItem = OrderItem.builder()
+                .id(itemId)
+                .menuItemId("menu-full")
+                .menuItemName("Full Item")
+                .price(35000.0)
+                .quantity(5)
+                .order(order)
+                .build();
 
-        assertEquals("item-full", fullItem.getId());
+        assertEquals(itemId, fullItem.getId());
         assertEquals("menu-full", fullItem.getMenuItemId());
         assertEquals("Full Item", fullItem.getMenuItemName());
         assertEquals(35000.0, fullItem.getPrice());

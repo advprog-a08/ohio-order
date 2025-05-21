@@ -8,9 +8,9 @@ import java.util.UUID;
 public interface OrderService {
     OrderDto.OrderResponse createOrder(OrderDto.OrderRequest orderRequest);
     List<OrderDto.OrderResponse> getOrdersByMejaId(UUID mejaId);
-    OrderDto.OrderResponse getOrderById(String orderId);
-    OrderDto.OrderResponse addItemToOrder(String orderId, OrderDto.OrderItemRequest itemRequest);
-    OrderDto.OrderResponse updateOrderItem(String orderId, String itemId, OrderDto.UpdateOrderItemRequest updateRequest);
-    OrderDto.OrderResponse removeItemFromOrder(String orderId, String itemId);
-    void deleteOrder(String orderId);
+    OrderDto.OrderResponse getOrderById(UUID orderId);
+    OrderDto.OrderResponse addItemToOrder(UUID orderId, OrderDto.OrderItemRequest itemRequest);
+    OrderDto.OrderResponse updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest);
+    OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId);
+    void deleteOrder(UUID orderId);
 }

@@ -34,13 +34,13 @@ public class CheckoutTest {
                 .build();
 
         order = Order.builder()
-                .id("order-123")
+                .id(UUID.randomUUID())
                 .meja(meja)
                 .orderItems(orderItems)
                 .build();
 
         orderItems.add(OrderItem.builder()
-                .id("item-1")
+                .id(UUID.randomUUID())
                 .menuItemId("menu-1")
                 .menuItemName("Burger")
                 .price(50000.0)
@@ -48,7 +48,7 @@ public class CheckoutTest {
                 .build());
 
         orderItems.add(OrderItem.builder()
-                .id("item-2")
+                .id(UUID.randomUUID())
                 .menuItemId("menu-2")
                 .menuItemName("Pizza")
                 .price(75000.0)

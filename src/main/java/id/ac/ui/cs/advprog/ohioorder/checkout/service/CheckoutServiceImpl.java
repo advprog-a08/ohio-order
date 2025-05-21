@@ -24,7 +24,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         return checkoutRepository.save(checkout);
     }
 
-    public Optional<Checkout> create(String orderId) {
+    public Optional<Checkout> create(UUID orderId) {
         Checkout checkout = new Checkout();
 
         Optional<Order> order = orderRepository.findById(orderId);
