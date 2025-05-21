@@ -42,16 +42,12 @@ public class CheckoutTest {
         orderItems.add(OrderItem.builder()
                 .id(UUID.randomUUID())
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .build());
 
         orderItems.add(OrderItem.builder()
                 .id(UUID.randomUUID())
                 .menuItemId("menu-2")
-                .menuItemName("Pizza")
-                .price(75000.0)
                 .quantity(1)
                 .build());
 
@@ -88,13 +84,5 @@ public class CheckoutTest {
         Order order = new Order();
         checkout.setOrder(order);
         assertEquals(order, checkout.getOrder());
-    }
-
-    @Test
-    void testCalculateTotal_calculatesTotalCorrectly() {
-        double expected = orderItems.stream()
-                        .mapToDouble(item -> item.getPrice() * item.getQuantity())
-                        .sum();
-        assertEquals(expected, checkout.calculateTotal());
     }
 }

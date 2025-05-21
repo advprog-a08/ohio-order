@@ -34,13 +34,6 @@ public class OrderDto {
         @NotNull(message = "Menu item ID is required")
         private String menuItemId;
 
-        @NotBlank(message = "Menu item name is required")
-        private String menuItemName;
-
-        @NotNull(message = "Price is required")
-        @Min(value = 0, message = "Price must be greater than or equal to 0")
-        private Double price;
-
         @NotNull(message = "Quantity is required")
         @Min(value = 1, message = "Quantity must be at least 1")
         private Integer quantity;
@@ -68,6 +61,8 @@ public class OrderDto {
         private UUID id;
         private String menuItemId;
         private String menuItemName;
+        private String menuItemDescription;
+        private String menuItemCategory;
         private Double price;
         private Integer quantity;
         private Double subtotal;

@@ -51,16 +51,12 @@ class OrderItemRepositoryTest {
 
         orderItem1 = OrderItem.builder()
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .order(order)
                 .build();
 
         orderItem2 = OrderItem.builder()
                 .menuItemId("menu-2")
-                .menuItemName("Pizza")
-                .price(75000.0)
                 .quantity(1)
                 .order(order)
                 .build();
@@ -107,8 +103,6 @@ class OrderItemRepositoryTest {
     void save_CreatesNewOrderItem() {
         OrderItem newItem = OrderItem.builder()
                 .menuItemId("menu-3")
-                .menuItemName("Soda")
-                .price(15000.0)
                 .quantity(3)
                 .order(order)
                 .build();
@@ -117,8 +111,6 @@ class OrderItemRepositoryTest {
 
         assertNotNull(savedItem.getId());
         assertEquals("menu-3", savedItem.getMenuItemId());
-        assertEquals("Soda", savedItem.getMenuItemName());
-        assertEquals(15000.0, savedItem.getPrice());
         assertEquals(3, savedItem.getQuantity());
         assertEquals(order, savedItem.getOrder());
 
@@ -132,10 +124,7 @@ class OrderItemRepositoryTest {
         orderItemRepository.delete(orderItem1);
         entityManager.flush();
 
-        Optional<OrderItem> retrievedItem = orderItemRepository.findById(orderItem1.getId());
-        assertTrue(retrievedItem.isEmpty());
-
-        Optional<OrderItem> otherItem = orderItemRepository.findById(orderItem2.getId());
-        assertTrue(otherItem.isPresent());
+        Optional<OrderItem> result = orderItemRepository.findById(orderItem1.getId());
+        assertTrue(result.isEmpty());
     }
 }

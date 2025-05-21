@@ -46,8 +46,6 @@ class OrderControllerTest {
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
-                                .menuItemName("Burger")
-                                .price(50000.0)
                                 .quantity(2)
                                 .build()
                 ))
@@ -76,8 +74,6 @@ class OrderControllerTest {
 
         itemRequest = OrderDto.OrderItemRequest.builder()
                 .menuItemId("menu-2")
-                .menuItemName("Pizza")
-                .price(75000.0)
                 .quantity(1)
                 .build();
 

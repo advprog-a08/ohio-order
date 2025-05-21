@@ -24,8 +24,6 @@ class OrderItemTest {
         orderItem = OrderItem.builder()
                 .id(orderItemId)
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .order(order)
                 .build();
@@ -35,8 +33,6 @@ class OrderItemTest {
     void gettersAndSetters_WorkCorrectly() {
         assertEquals(orderItemId, orderItem.getId());
         assertEquals("menu-1", orderItem.getMenuItemId());
-        assertEquals("Burger", orderItem.getMenuItemName());
-        assertEquals(50000.0, orderItem.getPrice());
         assertEquals(2, orderItem.getQuantity());
         assertEquals(order, orderItem.getOrder());
 
@@ -46,15 +42,11 @@ class OrderItemTest {
         UUID updatedOrderId = UUID.randomUUID();
         orderItem.setId(updatedOrderId);
         orderItem.setMenuItemId("menu-updated");
-        orderItem.setMenuItemName("Updated Burger");
-        orderItem.setPrice(60000.0);
         orderItem.setQuantity(3);
         orderItem.setOrder(newOrder);
 
         assertEquals(updatedOrderId, orderItem.getId());
         assertEquals("menu-updated", orderItem.getMenuItemId());
-        assertEquals("Updated Burger", orderItem.getMenuItemName());
-        assertEquals(60000.0, orderItem.getPrice());
         assertEquals(3, orderItem.getQuantity());
         assertEquals(newOrder, orderItem.getOrder());
     }
@@ -65,16 +57,12 @@ class OrderItemTest {
         OrderItem builtItem = OrderItem.builder()
                 .id(itemId)
                 .menuItemId("menu-test")
-                .menuItemName("Test Food")
-                .price(25000.0)
                 .quantity(4)
                 .order(order)
                 .build();
 
         assertEquals(itemId, builtItem.getId());
         assertEquals("menu-test", builtItem.getMenuItemId());
-        assertEquals("Test Food", builtItem.getMenuItemName());
-        assertEquals(25000.0, builtItem.getPrice());
         assertEquals(4, builtItem.getQuantity());
         assertEquals(order, builtItem.getOrder());
     }
@@ -85,8 +73,6 @@ class OrderItemTest {
 
         assertNull(emptyItem.getId());
         assertNull(emptyItem.getMenuItemId());
-        assertNull(emptyItem.getMenuItemName());
-        assertEquals(0.0, emptyItem.getPrice());
         assertEquals(0, emptyItem.getQuantity());
         assertNull(emptyItem.getOrder());
     }
@@ -94,19 +80,15 @@ class OrderItemTest {
     @Test
     void allArgsConstructor_CreatesFullOrderItem() {
         UUID itemId = UUID.randomUUID();
-        OrderItem fullItem = OrderItem.builder()
-                .id(itemId)
-                .menuItemId("menu-full")
-                .menuItemName("Full Item")
-                .price(35000.0)
-                .quantity(5)
-                .order(order)
-                .build();
+        OrderItem fullItem = new OrderItem(
+                itemId,
+                "menu-full",
+                5,
+                order
+        );
 
         assertEquals(itemId, fullItem.getId());
         assertEquals("menu-full", fullItem.getMenuItemId());
-        assertEquals("Full Item", fullItem.getMenuItemName());
-        assertEquals(35000.0, fullItem.getPrice());
         assertEquals(5, fullItem.getQuantity());
         assertEquals(order, fullItem.getOrder());
     }

@@ -13,6 +13,7 @@ public class OhioOrderApplication {
         System.setProperty("spring.datasource.url", dotenv.get("DATABASE_URL"));
         System.setProperty("spring.datasource.username", dotenv.get("DATABASE_USERNAME"));
         System.setProperty("spring.datasource.password", dotenv.get("DATABASE_PASSWORD"));
+        System.setProperty("MENU_SERVICE_URL", dotenv.get("MENU_SERVICE_URL"));
 
         SpringApplication.run(OhioOrderApplication.class, args);
     }

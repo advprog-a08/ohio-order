@@ -40,8 +40,6 @@ class OrderTest {
         orderItem1 = OrderItem.builder()
                 .id(orderItem1Id)
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .build();
 
@@ -49,27 +47,8 @@ class OrderTest {
         orderItem2 = OrderItem.builder()
                 .id(orderItem2Id)
                 .menuItemId("menu-2")
-                .menuItemName("Pizza")
-                .price(75000.0)
                 .quantity(1)
                 .build();
-    }
-
-    @Test
-    void calculateTotal_ReturnsCorrectSum() {
-        order.addOrderItem(orderItem1);
-        order.addOrderItem(orderItem2);
-
-        double total = order.calculateTotal();
-
-        assertEquals(175000.0, total);
-    }
-
-    @Test
-    void calculateTotal_WithNoItems_ReturnsZero() {
-        double total = order.calculateTotal();
-
-        assertEquals(0.0, total);
     }
 
     @Test

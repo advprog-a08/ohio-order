@@ -20,7 +20,6 @@ public class OrderMapper {
     }
 
     public Order toEntity(OrderDto.OrderRequest orderRequest) {
-        // Get the Meja instance
         var mejaResponse = mejaService.getMejaById(orderRequest.getMejaId());
         Meja meja = Meja.builder()
                 .id(mejaResponse.getId())
@@ -41,8 +40,6 @@ public class OrderMapper {
                     .map(itemRequest -> {
                         OrderItem orderItem = OrderItem.builder()
                                 .menuItemId(itemRequest.getMenuItemId())
-                                .menuItemName(itemRequest.getMenuItemName())
-                                .price(itemRequest.getPrice())
                                 .quantity(itemRequest.getQuantity())
                                 .build();
                         order.addOrderItem(orderItem);
@@ -66,7 +63,7 @@ public class OrderMapper {
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
-                .total(order.calculateTotal())
+                .total(0)
                 .build();
     }
 
@@ -74,10 +71,7 @@ public class OrderMapper {
         return OrderDto.OrderItemResponse.builder()
                 .id(orderItem.getId())
                 .menuItemId(orderItem.getMenuItemId())
-                .menuItemName(orderItem.getMenuItemName())
-                .price(orderItem.getPrice())
                 .quantity(orderItem.getQuantity())
-                .subtotal(orderItem.getPrice() * orderItem.getQuantity())
                 .build();
     }
 }

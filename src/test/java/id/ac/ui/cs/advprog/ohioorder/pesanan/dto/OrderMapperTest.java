@@ -60,8 +60,6 @@ class OrderMapperTest {
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
-                                .menuItemName("Burger")
-                                .price(50000.0)
                                 .quantity(2)
                                 .build()
                 ))
@@ -71,8 +69,6 @@ class OrderMapperTest {
         orderItem = OrderItem.builder()
                 .id(orderItemId)
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .build();
 
@@ -104,8 +100,6 @@ class OrderMapperTest {
 
         OrderItem resultItem = result.getOrderItems().getFirst();
         assertEquals("menu-1", resultItem.getMenuItemId());
-        assertEquals("Burger", resultItem.getMenuItemName());
-        assertEquals(50000.0, resultItem.getPrice());
         assertEquals(2, resultItem.getQuantity());
     }
 
@@ -131,7 +125,6 @@ class OrderMapperTest {
         assertEquals(order.getMeja().getNomorMeja(), result.getNomorMeja());
         assertEquals(order.getCreatedAt(), result.getCreatedAt());
         assertEquals(order.getUpdatedAt(), result.getUpdatedAt());
-        assertEquals(100000.0, result.getTotal()); // 50000 * 2
 
         assertNotNull(result.getItems());
         assertEquals(1, result.getItems().size());
@@ -139,10 +132,7 @@ class OrderMapperTest {
         OrderDto.OrderItemResponse itemResponse = result.getItems().getFirst();
         assertEquals(orderItemId, itemResponse.getId());
         assertEquals("menu-1", itemResponse.getMenuItemId());
-        assertEquals("Burger", itemResponse.getMenuItemName());
-        assertEquals(50000.0, itemResponse.getPrice());
         assertEquals(2, itemResponse.getQuantity());
-        assertEquals(100000.0, itemResponse.getSubtotal());
     }
 
     @Test
@@ -152,9 +142,6 @@ class OrderMapperTest {
         assertNotNull(result);
         assertEquals(orderItem.getId(), result.getId());
         assertEquals(orderItem.getMenuItemId(), result.getMenuItemId());
-        assertEquals(orderItem.getMenuItemName(), result.getMenuItemName());
-        assertEquals(orderItem.getPrice(), result.getPrice());
         assertEquals(orderItem.getQuantity(), result.getQuantity());
-        assertEquals(orderItem.getPrice() * orderItem.getQuantity(), result.getSubtotal());
     }
 }

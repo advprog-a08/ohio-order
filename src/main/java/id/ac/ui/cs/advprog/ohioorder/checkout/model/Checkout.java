@@ -61,8 +61,4 @@ public class Checkout {
     public void cancel() throws InvalidStateTransitionException {
         checkoutState.cancel(this);
     }
-
-    public double calculateTotal() {
-        return order.calculateTotal();
-    }
 }
