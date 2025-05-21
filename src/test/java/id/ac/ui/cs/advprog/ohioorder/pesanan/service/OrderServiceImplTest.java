@@ -4,6 +4,9 @@ import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.client.MenuServiceClient;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.MenuItemDto;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.MenuServiceResponse;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderMapper;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
@@ -39,6 +42,9 @@ class OrderServiceImplTest {
 
     @Mock
     private MejaService mejaService;
+    
+    @Mock
+    private MenuServiceClient menuServiceClient;
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -50,6 +56,8 @@ class OrderServiceImplTest {
     private OrderDto.OrderResponse orderResponse;
     private Meja meja;
     private MejaResponse mejaResponse;
+    private MenuServiceResponse menuServiceResponse;
+    private MenuItemDto menuItemDto;
 
     @BeforeEach
     void setUp() {
@@ -68,25 +76,35 @@ class OrderServiceImplTest {
                 .build();
 
         orderId = UUID.randomUUID();
-        order = Order.builder()
+        order = spy(Order.builder()
                 .id(orderId)
                 .meja(meja)
                 .orderItems(new ArrayList<>())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .build();
+                .build());
 
         orderRequest = OrderDto.OrderRequest.builder()
                 .mejaId(mejaId)
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
-                                .menuItemName("Burger")
-                                .price(50000.0)
                                 .quantity(2)
                                 .build()
                 ))
                 .build();
+
+        menuItemDto = MenuItemDto.builder()
+                .id("menu-1")
+                .name("Burger")
+                .description("Delicious burger")
+                .price(50000.0)
+                .build();
+                
+        menuServiceResponse = new MenuServiceResponse();
+        menuServiceResponse.setSuccess(true);
+        menuServiceResponse.setMessage("Success");
+        menuServiceResponse.setData(menuItemDto);
 
         orderResponse = OrderDto.OrderResponse.builder()
                 .id(orderId)
@@ -111,16 +129,30 @@ class OrderServiceImplTest {
     @Test
     void createOrder_Success() {
         when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
+        when(menuServiceClient.verifyMenuItemExists("menu-1")).thenReturn(true);
         when(orderMapper.toEntity(orderRequest)).thenReturn(order);
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         OrderDto.OrderResponse result = orderService.createOrder(orderRequest);
 
         assertNotNull(result);
         assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
+        verify(menuServiceClient).verifyMenuItemExists("menu-1");
         verify(orderRepository).save(order);
+    }
+
+    @Test
+    void createOrder_ThrowsException_WhenMenuItemNotFound() {
+        when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
+        when(menuServiceClient.verifyMenuItemExists("menu-1")).thenReturn(false);
+
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
+                () -> orderService.createOrder(orderRequest));
+        assertEquals("Menu item not found with ID: menu-1", exception.getMessage());
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
@@ -143,6 +175,7 @@ class OrderServiceImplTest {
     void getOrdersByMejaId_Success() {
         when(orderRepository.findByMejaId(mejaId)).thenReturn(List.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         List<OrderDto.OrderResponse> result = orderService.getOrdersByMejaId(mejaId);
 
@@ -155,6 +188,7 @@ class OrderServiceImplTest {
     void getOrderById_Success() {
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         OrderDto.OrderResponse result = orderService.getOrderById(orderId);
 
@@ -177,20 +211,25 @@ class OrderServiceImplTest {
         UUID orderId = UUID.randomUUID();
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
                 .menuItemId("menu-2")
-                .menuItemName("Pizza")
-                .price(75000.0)
                 .quantity(1)
                 .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(menuServiceClient.verifyMenuItemExists("menu-2")).thenReturn(true);
         when(orderItemRepository.findByOrderIdAndMenuItemId(orderId, "menu-2")).thenReturn(Optional.empty());
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         OrderDto.OrderResponse result = orderService.addItemToOrder(orderId, itemRequest);
 
         assertNotNull(result);
+        verify(menuServiceClient).verifyMenuItemExists("menu-2");
         verify(orderRepository).save(any(Order.class));
+        
+        verify(order).addOrderItem(argThat(orderItem ->
+                orderItem.getMenuItemId().equals("menu-2") &&
+                orderItem.getQuantity() == 1));
     }
 
     @Test
@@ -200,30 +239,45 @@ class OrderServiceImplTest {
 
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
                 .menuItemId(menuItemId)
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(1)
                 .build();
 
         OrderItem existingItem = OrderItem.builder()
                 .id(UUID.randomUUID())
                 .menuItemId(menuItemId)
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .order(order)
                 .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(menuServiceClient.verifyMenuItemExists(menuItemId)).thenReturn(true);
         when(orderItemRepository.findByOrderIdAndMenuItemId(orderId, menuItemId)).thenReturn(Optional.of(existingItem));
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMenuItem(menuItemId)).thenReturn(menuServiceResponse);
 
         OrderDto.OrderResponse result = orderService.addItemToOrder(orderId, itemRequest);
 
         assertNotNull(result);
         verify(orderItemRepository).save(existingItem);
         assertEquals(3, existingItem.getQuantity());
+    }
+    
+    @Test
+    void addItemToOrder_ThrowsException_WhenMenuItemNotFound() {
+        UUID orderId = UUID.randomUUID();
+        OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
+                .menuItemId("menu-nonexistent")
+                .quantity(1)
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(menuServiceClient.verifyMenuItemExists("menu-nonexistent")).thenReturn(false);
+
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
+                () -> orderService.addItemToOrder(orderId, itemRequest));
+        assertEquals("Menu item not found with ID: menu-nonexistent", exception.getMessage());
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
@@ -237,8 +291,6 @@ class OrderServiceImplTest {
         OrderItem orderItem = OrderItem.builder()
                 .id(itemId)
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .build();
 
@@ -278,8 +330,6 @@ class OrderServiceImplTest {
         OrderItem orderItem = OrderItem.builder()
                 .id(itemId)
                 .menuItemId("menu-1")
-                .menuItemName("Burger")
-                .price(50000.0)
                 .quantity(2)
                 .build();
 
@@ -316,5 +366,34 @@ class OrderServiceImplTest {
         orderService.deleteOrder(orderId);
 
         verify(orderRepository).delete(order);
+    }
+    
+    @Test
+    void enrichOrderResponse_HandlesDeletedMenuItems() {
+        OrderDto.OrderResponse response = OrderDto.OrderResponse.builder()
+                .id(orderId)
+                .mejaId(mejaId)
+                .nomorMeja("A1")
+                .items(List.of(
+                        OrderDto.OrderItemResponse.builder()
+                                .id(UUID.randomUUID())
+                                .menuItemId("deleted-menu-item")
+                                .quantity(2)
+                                .build()
+                ))
+                .build();
+                
+        when(menuServiceClient.getMenuItem("deleted-menu-item"))
+                .thenThrow(new NoSuchElementException("Menu item not found"));
+
+        OrderDto.OrderResponse result = orderService.enrichOrderResponse(response);
+
+        assertNotNull(result);
+        OrderDto.OrderItemResponse itemResponse = result.getItems().getFirst();
+        assertEquals("[Unavailable Item]", itemResponse.getMenuItemName());
+        assertEquals("This menu item is Unavailable.", itemResponse.getMenuItemDescription());
+        assertEquals("Unavailable", itemResponse.getMenuItemCategory());
+        assertEquals(0.0, itemResponse.getPrice());
+        assertEquals(0.0, itemResponse.getSubtotal());
     }
 }
