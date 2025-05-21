@@ -23,12 +23,6 @@ public class OrderItem {
     @Column(name = "menu_item_id")
     private String menuItemId;
 
-    @Column(name = "menu_item_name")
-    private String menuItemName;
-
-    @Column(nullable = false)
-    private double price;
-
     @Column(nullable = false)
     private int quantity;
 
