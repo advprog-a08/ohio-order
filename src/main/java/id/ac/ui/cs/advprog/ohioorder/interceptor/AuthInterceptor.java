@@ -32,7 +32,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         boolean requiresAdmin = method.hasMethodAnnotation(RequireAdmin.class);
-        boolean requiresTableSession = method.hasMethodAnnotation(RequireTableSession.class);
+        boolean requiresCustomer = method.hasMethodAnnotation(RequireTableSession.class);
 
         if (requiresAdmin) {
             String authHeader = request.getHeader("Authorization");
@@ -55,7 +55,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
         }
 
-        if (requiresTableSession) {
+        if (requiresCustomer) {
             String sessionId = request.getHeader("X-Session-Id");
             if (sessionId == null || sessionId.isEmpty()) {
                 response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing session ID");
