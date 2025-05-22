@@ -65,5 +65,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(MejaNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleMejaNotAvailableException(MejaNotAvailableException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     record ErrorResponse(int status, String message, LocalDateTime timestamp) {}
 }
