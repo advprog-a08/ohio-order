@@ -5,6 +5,8 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
+import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
+import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +25,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = CheckoutController.class)
-@Import(CheckoutControllerTest.TestConfig.class)
+@Import({
+        CheckoutControllerTest.TestConfig.class,
+        CheckoutControllerTest.MockGrpcClientConfig.class,
+        CheckoutControllerTest.MockInterceptorConfig.class
+})
 class CheckoutControllerTest {
 
     @TestConfiguration
@@ -34,8 +40,27 @@ class CheckoutControllerTest {
         }
     }
 
+    @TestConfiguration
+    static class MockGrpcClientConfig {
+        @Bean
+        public AdminGrpcClient adminGrpcClient() {
+            return mock(AdminGrpcClient.class);
+        }
+    }
+
+    @TestConfiguration
+    static class MockInterceptorConfig {
+        @Bean
+        public AuthInterceptor authInterceptor() {
+            return mock(AuthInterceptor.class);
+        }
+    }
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private AuthInterceptor authInterceptor;
 
     @Autowired
     private CheckoutService checkoutService;
@@ -47,10 +72,15 @@ class CheckoutControllerTest {
     private UUID validOrderId;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         validOrderId = UUID.randomUUID();
         mockCheckout = new Checkout();
         mockCheckout.setId(validOrderId);
+
+        // Let all requests through
+        doAnswer(invocation -> true)
+                .when(authInterceptor)
+                .preHandle(any(), any(), any());
     }
 
     @Test
