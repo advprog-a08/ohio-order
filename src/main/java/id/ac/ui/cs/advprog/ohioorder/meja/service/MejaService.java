@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder.meja.service;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 
 import java.util.List;
@@ -18,4 +19,5 @@ public interface MejaService {
     MejaResponse setMejaStatus(UUID id, MejaStatus status);
     boolean isMejaAvailable(UUID id);
     List<MejaResponse> getAvailableMeja();
+    TableSessionResponse createTableSession(UUID id);
 }
