@@ -193,4 +193,17 @@ class MejaControllerTest {
         
         verify(mejaService).getAvailableMeja();
     }
+
+    @Test
+    void testGetMejaStatusReturnsStatus() {
+        when(mejaService.getMejaById(uuid)).thenReturn(mejaResponse);
+
+        ResponseEntity<MejaStatus> responseEntity = mejaController.getMejaStatus(uuid);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(MejaStatus.TERSEDIA, responseEntity.getBody());
+
+        verify(mejaService).getMejaById(uuid);
+    }
 }
