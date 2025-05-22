@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class Customer {
+public class TableSession {
     private String id;
     private String tableId;
     private boolean isActive;

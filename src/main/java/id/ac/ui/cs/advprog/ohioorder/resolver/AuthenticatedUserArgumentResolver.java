@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.resolver;
 
 import id.ac.ui.cs.advprog.ohioorder.annotation.AuthenticatedAdmin;
-import id.ac.ui.cs.advprog.ohioorder.annotation.AuthenticatedCustomer;
+import id.ac.ui.cs.advprog.ohioorder.annotation.AuthenticatedTableSession;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ public class AuthenticatedUserArgumentResolver implements HandlerMethodArgumentR
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(AuthenticatedAdmin.class)
-                || parameter.hasParameterAnnotation(AuthenticatedCustomer.class);
+                || parameter.hasParameterAnnotation(AuthenticatedTableSession.class);
     }
 
     @Override
@@ -30,8 +30,8 @@ public class AuthenticatedUserArgumentResolver implements HandlerMethodArgumentR
             return request.getAttribute("authenticatedAdmin");
         }
 
-        if (parameter.hasParameterAnnotation(AuthenticatedCustomer.class)) {
-            return request.getAttribute("authenticatedCustomer");
+        if (parameter.hasParameterAnnotation(AuthenticatedTableSession.class)) {
+            return request.getAttribute("authenticatedTableSession");
         }
 
         return null;

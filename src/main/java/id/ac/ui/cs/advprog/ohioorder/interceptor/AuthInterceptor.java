@@ -2,11 +2,11 @@ package id.ac.ui.cs.advprog.ohioorder.interceptor;
 
 import admin.AdminOuterClass;
 import id.ac.ui.cs.advprog.ohioorder.annotation.RequireAdmin;
-import id.ac.ui.cs.advprog.ohioorder.annotation.RequireCustomer;
+import id.ac.ui.cs.advprog.ohioorder.annotation.RequireTableSession;
 import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.grpc.TableSessionGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.model.Admin;
-import id.ac.ui.cs.advprog.ohioorder.model.Customer;
+import id.ac.ui.cs.advprog.ohioorder.model.TableSession;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -32,7 +32,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         boolean requiresAdmin = method.hasMethodAnnotation(RequireAdmin.class);
-        boolean requiresCustomer = method.hasMethodAnnotation(RequireCustomer.class);
+        boolean requiresTableSession = method.hasMethodAnnotation(RequireTableSession.class);
 
         if (requiresAdmin) {
             String authHeader = request.getHeader("Authorization");
@@ -55,7 +55,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
         }
 
-        if (requiresCustomer) {
+        if (requiresTableSession) {
             String sessionId = request.getHeader("X-Session-Id");
             if (sessionId == null || sessionId.isEmpty()) {
                 response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing session ID");
@@ -65,13 +65,13 @@ public class AuthInterceptor implements HandlerInterceptor {
             try {
                 TableSessionOuterClass.TableSessionResponse result = tableSessionGrpcClient.verifyTableSession(sessionId);
 
-                Customer customer = new Customer(
+                TableSession tableSession = new TableSession(
                         result.getTableSession().getId(),
                         result.getTableSession().getTableId(),
                         result.getTableSession().getIsActive()
                 );
 
-                request.setAttribute("authenticatedCustomer", customer);
+                request.setAttribute("authenticatedTableSession", tableSession);
 
                 return true;
             } catch (RuntimeException e) {
