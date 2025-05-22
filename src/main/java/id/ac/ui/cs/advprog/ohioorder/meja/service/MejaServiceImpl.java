@@ -5,7 +5,6 @@ import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
-import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaAlreadyExistsException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotAvailableException;
@@ -127,23 +126,18 @@ public class MejaServiceImpl implements MejaService {
 
     @Override
     public TableSessionResponse createTableSession(UUID id) {
-        // Check if the table is available
         if (!isMejaAvailable(id)) {
             throw new MejaNotAvailableException("Meja dengan ID " + id + " tidak tersedia untuk reservasi");
         }
-        
-        // Get the table
+
         Meja meja = mejaRepository.findById(id)
                 .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
-        
-        // Call the gRPC client to create a table session
+
         TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.createTableSession(meja.getId().toString());
         
-        // Update the table status to TERISI (occupied)
         meja.setStatus(MejaStatus.TERISI);
         mejaRepository.save(meja);
-        
-        // Create and return the response - modified to correctly extract data from grpcResponse
+
         return TableSessionResponse.builder()
                 .tableId(meja.getId().toString())
                 .sessionId(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getId() : "")
