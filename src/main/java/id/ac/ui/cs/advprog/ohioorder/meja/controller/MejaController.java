@@ -65,4 +65,10 @@ public class MejaController {
     public ResponseEntity<List<MejaResponse>> getAvailableMeja() {
         return ResponseEntity.ok(mejaService.getAvailableMeja());
     }
+
+    @GetMapping("/{id}/status")
+    public ResponseEntity<MejaStatus> getMejaStatus(@PathVariable UUID id) {
+        MejaResponse meja = mejaService.getMejaById(id);
+        return ResponseEntity.ok(meja.getStatus());
+    }
 }
