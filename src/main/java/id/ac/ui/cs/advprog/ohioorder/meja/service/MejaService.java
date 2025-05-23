@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public interface MejaService {
     MejaResponse createMeja(MejaRequest request);
@@ -19,5 +20,5 @@ public interface MejaService {
     MejaResponse setMejaStatus(UUID id, MejaStatus status);
     boolean isMejaAvailable(UUID id);
     List<MejaResponse> getAvailableMeja();
-    TableSessionResponse createTableSession(UUID id);
+    CompletableFuture<TableSessionResponse> createTableSession(UUID id);
 }
