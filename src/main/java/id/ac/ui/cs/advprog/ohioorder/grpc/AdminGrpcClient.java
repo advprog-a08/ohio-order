@@ -21,26 +21,10 @@ public class AdminGrpcClient {
         stub = AdminServiceGrpc.newBlockingStub(channel);
     }
 
-    public AdminResponse createAdmin(String email, String password) {
-        CreateAdminRequest request = CreateAdminRequest.newBuilder()
-                .setEmail(email)
-                .setPassword(password)
-                .build();
-        return stub.createAdmin(request);
-    }
-
     public AdminResponse verifyAdmin(String token) {
         AdminOuterClass.TokenRequest request = AdminOuterClass.TokenRequest.newBuilder()
                 .setToken(token)
                 .build();
         return stub.verifyAdmin(request);
-    }
-
-    public AdminOuterClass.TokenResponse loginAdmin(String email, String password) {
-        AdminOuterClass.LoginAdminRequest request = AdminOuterClass.LoginAdminRequest.newBuilder()
-                .setEmail(email)
-                .setPassword(password)
-                .build();
-        return stub.loginAdmin(request);
     }
 }
