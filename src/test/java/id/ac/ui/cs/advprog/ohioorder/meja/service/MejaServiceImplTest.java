@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -407,7 +409,9 @@ class MejaServiceImplTest {
         when(tableSessionGrpcClient.createTableSession(uuid.toString())).thenReturn(grpcResponse);
         when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
         
-        TableSessionResponse result = mejaService.createTableSession(uuid);
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.createTableSession(uuid);
+ 
+        TableSessionResponse result = resultFuture.join();
         
         assertNotNull(result);
         assertEquals(uuid.toString(), result.getTableId());
@@ -424,9 +428,14 @@ class MejaServiceImplTest {
     void testCreateTableSessionThrowsExceptionWhenMejaNotFound() {
         when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
         
-        assertThrows(MejaNotFoundException.class, () -> {
-            mejaService.createTableSession(uuid);
-        });
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+        
+        CompletionException completionException = assertThrows(
+            CompletionException.class, 
+            () -> future.join()
+        );
+        
+        assertTrue(completionException.getCause() instanceof MejaNotFoundException);
         
         verify(mejaRepository).findById(uuid);
         verify(tableSessionGrpcClient, never()).createTableSession(anyString());
@@ -443,9 +452,14 @@ class MejaServiceImplTest {
         
         when(mejaRepository.findById(uuid)).thenReturn(Optional.of(busyMeja));
         
-        assertThrows(MejaNotAvailableException.class, () -> {
-            mejaService.createTableSession(uuid);
-        });
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+        
+        CompletionException completionException = assertThrows(
+            CompletionException.class, 
+            () -> future.join()
+        );
+        
+        assertTrue(completionException.getCause() instanceof MejaNotAvailableException);
         
         verify(mejaRepository).findById(uuid);
         verify(tableSessionGrpcClient, never()).createTableSession(anyString());
