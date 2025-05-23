@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -86,7 +87,7 @@ class OrderControllerTest {
     void createOrder_Success() {
         when(orderService.createOrder(any(OrderDto.OrderRequest.class))).thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.createOrder(orderRequest);
+        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response = orderController.createOrder(orderRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -99,7 +100,7 @@ class OrderControllerTest {
         String mejaIdStr = mejaId.toString();
         when(orderService.getOrdersByMejaId(mejaId)).thenReturn(List.of(orderResponse));
 
-        ResponseEntity<List<OrderDto.OrderResponse>> response = orderController.getOrdersByMejaId(mejaIdStr);
+        ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> response = orderController.getOrdersByMejaId(mejaIdStr);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -114,7 +115,7 @@ class OrderControllerTest {
 
         when(orderService.getOrderById(orderId)).thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.getOrderById(orderId);
+        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response = orderController.getOrderById(orderId);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -127,7 +128,7 @@ class OrderControllerTest {
         UUID orderId = UUID.randomUUID();
         when(orderService.addItemToOrder(eq(orderId), any(OrderDto.OrderItemRequest.class))).thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.addItemToOrder(orderId, itemRequest);
+        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response = orderController.addItemToOrder(orderId, itemRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -142,7 +143,7 @@ class OrderControllerTest {
         when(orderService.updateOrderItem(eq(orderId), eq(itemId), any(OrderDto.UpdateOrderItemRequest.class)))
                 .thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.updateOrderItem(orderId, itemId, updateItemRequest);
+        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response = orderController.updateOrderItem(orderId, itemId, updateItemRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
