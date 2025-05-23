@@ -35,25 +35,29 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public OrderDto.OrderResponse createOrder(OrderDto.OrderRequest orderRequest) {
-        var mejaResponse = mejaService.getMejaById(orderRequest.getMejaId());
+    var mejaResponse = mejaService.getMejaById(orderRequest.getMejaId());
 
-        if (!mejaResponse.getStatus().equals(MejaStatus.TERSEDIA)) {
-            throw new IllegalStateException("Table is not available for ordering");
-        }
+    if (!mejaResponse.getStatus().equals(MejaStatus.TERSEDIA)) {
+        throw new IllegalStateException("Table is not available for ordering");
+    }
 
-        if (orderRequest.getItems() != null) {
-            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
-                if (!menuServiceClient.verifyMenuItemExists(itemRequest.getMenuItemId())) {
-                    throw new NoSuchElementException("Menu item not found with ID: " + itemRequest.getMenuItemId());
-                }
+    if (orderRequest.getItems() != null) {
+        for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
+            MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+            
+            if (menuResponse.getData().getQuantity() < itemRequest.getQuantity()) {
+                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
+                    itemRequest.getMenuItemId() + ". Available: " + menuResponse.getData().getQuantity() + 
+                    ", Requested: " + itemRequest.getQuantity());
             }
         }
-
-        Order order = orderMapper.toEntity(orderRequest);
-        Order savedOrder = orderRepository.save(order);
-
-        return enrichOrderResponse(orderMapper.toDto(savedOrder));
     }
+
+    Order order = orderMapper.toEntity(orderRequest);
+    Order savedOrder = orderRepository.save(order);
+
+    return enrichOrderResponse(orderMapper.toDto(savedOrder));
+}
 
     OrderDto.OrderResponse enrichOrderResponse(OrderDto.OrderResponse orderResponse) {
         if (orderResponse.getItems() != null) {
@@ -114,19 +118,34 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (!menuServiceClient.verifyMenuItemExists(itemRequest.getMenuItemId())) {
-            throw new NoSuchElementException("Menu item not found with ID: " + itemRequest.getMenuItemId());
-        }
-
-
+        // Check if menu item exists
+        MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+        int availableQuantity = menuResponse.getData().getQuantity();
+        
         OrderItem existingItem = orderItemRepository
                 .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
                 .orElse(null);
-
+        
+        int requestedQuantity = itemRequest.getQuantity();
+        
         if (existingItem != null) {
+            // For existing items, check if additional quantity is available
+            if (availableQuantity < requestedQuantity) {
+                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
+                    itemRequest.getMenuItemId() + ". Available: " + availableQuantity + 
+                    ", Requested: " + requestedQuantity);
+            }
+            
             existingItem.setQuantity(existingItem.getQuantity() + itemRequest.getQuantity());
             orderItemRepository.save(existingItem);
         } else {
+            // For new items, check if quantity is available
+            if (availableQuantity < requestedQuantity) {
+                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
+                    itemRequest.getMenuItemId() + ". Available: " + availableQuantity + 
+                    ", Requested: " + requestedQuantity);
+            }
+            
             OrderItem newItem = OrderItem.builder()
                     .menuItemId(itemRequest.getMenuItemId())
                     .quantity(itemRequest.getQuantity())
@@ -137,7 +156,7 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order);
         return enrichOrderResponse(orderMapper.toDto(updatedOrder));
     }
-
+    
     @Transactional
     public OrderDto.OrderResponse updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
         Order order = orderRepository.findById(orderId)
@@ -147,11 +166,28 @@ public class OrderServiceImpl implements OrderService {
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Order item not found with ID: " + itemId));
+                
+        String menuItemId = itemToUpdate.getMenuItemId();
+        int currentQuantity = itemToUpdate.getQuantity();
+        int newQuantity = updateRequest.getQuantity();
+        
+        // Only check availability if increasing quantity
+        if (newQuantity > currentQuantity) {
+            MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(menuItemId);
+            int availableQuantity = menuResponse.getData().getQuantity();
+            int additionalQuantity = newQuantity - currentQuantity;
+            
+            if (availableQuantity < additionalQuantity) {
+                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
+                    menuItemId + ". Available: " + availableQuantity + 
+                    ", Additional requested: " + additionalQuantity);
+            }
+        }
 
-        itemToUpdate.setQuantity(updateRequest.getQuantity());
+        itemToUpdate.setQuantity(newQuantity);
         Order updatedOrder = orderRepository.save(order);
 
-        return orderMapper.toDto(updatedOrder);
+        return enrichOrderResponse(orderMapper.toDto(updatedOrder));
     }
 
     @Transactional
