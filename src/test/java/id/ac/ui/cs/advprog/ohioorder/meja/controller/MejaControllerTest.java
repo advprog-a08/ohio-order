@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -218,14 +219,22 @@ class MejaControllerTest {
 
     @Test
     void testCreateTableSessionReturnsSessionResponse() {
-        when(mejaService.createTableSession(uuid)).thenReturn(tableSessionResponse);
+        UUID id = UUID.randomUUID();
+        TableSessionResponse response = TableSessionResponse.builder()
+                .tableId(id.toString())
+                .sessionId("session-123")
+                .isActive(true)
+                .message("Session created successfully")
+                .build();
+                
+        when(mejaService.createTableSession(id)).thenReturn(CompletableFuture.completedFuture(response));
 
-        ResponseEntity<TableSessionResponse> responseEntity = mejaController.createTableSession(uuid);
-
-        assertNotNull(responseEntity);
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertEquals(tableSessionResponse, responseEntity.getBody());
+        CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = mejaController.createTableSession(id);
+        ResponseEntity<TableSessionResponse> result = resultFuture.join();
         
-        verify(mejaService).createTableSession(uuid);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+        
+        verify(mejaService).createTableSession(id);
     }
 }
