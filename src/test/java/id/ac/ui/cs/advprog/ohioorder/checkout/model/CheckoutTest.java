@@ -58,7 +58,6 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forDraft() {
         checkout.setState(CheckoutStateType.DRAFT);
-        checkout.initializeState();
 
         assertInstanceOf(DraftState.class, checkout.getCheckoutState());
     }
@@ -66,7 +65,6 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forCompleted() {
         checkout.setState(CheckoutStateType.COMPLETED);
-        checkout.initializeState();
 
         assertInstanceOf(CompletedState.class, checkout.getCheckoutState());
     }
@@ -74,7 +72,6 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forCancelled() {
         checkout.setState(CheckoutStateType.CANCELLED);
-        checkout.initializeState();
 
         assertInstanceOf(CancelledState.class, checkout.getCheckoutState());
     }

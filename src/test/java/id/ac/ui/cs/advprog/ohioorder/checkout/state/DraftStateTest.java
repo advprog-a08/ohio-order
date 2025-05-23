@@ -15,7 +15,6 @@ public class DraftStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.DRAFT);
-        checkout.initializeState();
     }
 
     @Test

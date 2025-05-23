@@ -16,7 +16,6 @@ public class ReadyStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.READY);
-        checkout.initializeState();
     }
 
     @Test

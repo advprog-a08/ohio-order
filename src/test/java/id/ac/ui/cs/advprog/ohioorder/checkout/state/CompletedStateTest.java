@@ -16,7 +16,6 @@ public class CompletedStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.COMPLETED);
-        checkout.initializeState();
     }
 
     @Test

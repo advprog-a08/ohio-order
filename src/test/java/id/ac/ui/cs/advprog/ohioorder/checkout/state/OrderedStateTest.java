@@ -16,7 +16,6 @@ public class OrderedStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.ORDERED);
-        checkout.initializeState();
     }
 
     @Test

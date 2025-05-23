@@ -25,10 +25,6 @@ public class Checkout {
     @Enumerated(EnumType.STRING)
     private CheckoutStateType state;
 
-    @Transient
-    @JsonIgnore
-    private CheckoutState checkoutState;
-
     @NotNull
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false)
@@ -37,28 +33,22 @@ public class Checkout {
 
     public Checkout() {
         this.state = CheckoutStateType.DRAFT;
-        this.checkoutState = DraftState.getInstance();
     }
 
-    @PostLoad
-    public void initializeState() {
-        this.checkoutState = state.getCheckoutState();
-    }
-
-    public void setState(CheckoutStateType state) {
-        this.state = state;
-        this.initializeState();
+    @JsonIgnore
+    public CheckoutState getCheckoutState() {
+        return state.getCheckoutState();
     }
 
     public void nextState() {
-        checkoutState.next(this);
+        state.getCheckoutState().next(this);
     }
 
     public void update() {
-        checkoutState.update();
+        state.getCheckoutState().update();
     }
 
     public void cancel() throws InvalidStateTransitionException {
-        checkoutState.cancel(this);
+        state.getCheckoutState().cancel(this);
     }
 }

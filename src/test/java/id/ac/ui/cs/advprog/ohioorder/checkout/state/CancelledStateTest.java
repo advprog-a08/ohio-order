@@ -15,7 +15,6 @@ public class CancelledStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.CANCELLED);
-        checkout.initializeState();
     }
 
     @Test

@@ -16,7 +16,6 @@ public class PreparingStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.PREPARING);
-        checkout.initializeState();
     }
 
     @Test
