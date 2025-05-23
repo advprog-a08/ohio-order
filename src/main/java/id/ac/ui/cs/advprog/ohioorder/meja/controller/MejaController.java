@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/meja")
@@ -74,7 +75,8 @@ public class MejaController {
     }
 
     @PostMapping("/{id}/session")
-    public ResponseEntity<TableSessionResponse> createTableSession(@PathVariable UUID id) {
-        return ResponseEntity.ok(mejaService.createTableSession(id));
+    public CompletableFuture<ResponseEntity<TableSessionResponse>> createTableSession(@PathVariable UUID id) {
+        return mejaService.createTableSession(id)
+                .thenApply(ResponseEntity::ok);
     }
 }
