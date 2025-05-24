@@ -45,13 +45,7 @@ public class OrderServiceImpl implements OrderService {
 
         if (orderRequest.getItems() != null) {
             for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
-                MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
-
-                if (menuResponse.getData().getQuantity() < itemRequest.getQuantity()) {
-                    throw new IllegalStateException("Insufficient quantity available for menu item: " +
-                        itemRequest.getMenuItemId() + ". Available: " + menuResponse.getData().getQuantity() +
-                        ", Requested: " + itemRequest.getQuantity());
-                }
+                menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
             }
         }
 
@@ -66,15 +60,12 @@ public class OrderServiceImpl implements OrderService {
             return CompletableFuture.completedFuture(orderResponse);
         }
 
-        // Extract all menu item IDs
         List<String> menuItemIds = orderResponse.getItems().stream()
                 .map(OrderDto.OrderItemResponse::getMenuItemId)
                 .collect(Collectors.toList());
 
-        // Fetch all menu items in parallel
         return menuServiceClient.getMultipleMenuItemsAsync(menuItemIds)
                 .thenApply(menuResponses -> {
-                    // Create a map for easy lookup
                     Map<String, MenuServiceResponse> menuItemMap = menuResponses.stream()
                             .collect(Collectors.toMap(
                                     response -> response.getData().getId(),
@@ -143,34 +134,20 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        // Check if menu item exists
-        MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
-        int availableQuantity = menuResponse.getData().getQuantity();
-        
+        if (order.isLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
+        }
+
+        menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+
         OrderItem existingItem = orderItemRepository
                 .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
                 .orElse(null);
-        
-        int requestedQuantity = itemRequest.getQuantity();
-        
+
         if (existingItem != null) {
-            // For existing items, check if additional quantity is available
-            if (availableQuantity < requestedQuantity) {
-                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
-                    itemRequest.getMenuItemId() + ". Available: " + availableQuantity + 
-                    ", Requested: " + requestedQuantity);
-            }
-            
             existingItem.setQuantity(existingItem.getQuantity() + itemRequest.getQuantity());
             orderItemRepository.save(existingItem);
         } else {
-            // For new items, check if quantity is available
-            if (availableQuantity < requestedQuantity) {
-                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
-                    itemRequest.getMenuItemId() + ". Available: " + availableQuantity + 
-                    ", Requested: " + requestedQuantity);
-            }
-            
             OrderItem newItem = OrderItem.builder()
                     .menuItemId(itemRequest.getMenuItemId())
                     .quantity(itemRequest.getQuantity())
@@ -181,35 +158,22 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order);
         return enrichOrderResponseAsync(orderMapper.toDto(updatedOrder));
     }
-    
+
     @Transactional
     public CompletableFuture<OrderDto.OrderResponse> updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
+        if (order.isLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
+        }
+
         OrderItem itemToUpdate = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Order item not found with ID: " + itemId));
-                
-        String menuItemId = itemToUpdate.getMenuItemId();
-        int currentQuantity = itemToUpdate.getQuantity();
-        int newQuantity = updateRequest.getQuantity();
-        
-        // Only check availability if increasing quantity
-        if (newQuantity > currentQuantity) {
-            MenuServiceResponse menuResponse = menuServiceClient.getMenuItem(menuItemId);
-            int availableQuantity = menuResponse.getData().getQuantity();
-            int additionalQuantity = newQuantity - currentQuantity;
-            
-            if (availableQuantity < additionalQuantity) {
-                throw new IllegalStateException("Insufficient quantity available for menu item: " + 
-                    menuItemId + ". Available: " + availableQuantity + 
-                    ", Additional requested: " + additionalQuantity);
-            }
-        }
 
-        itemToUpdate.setQuantity(newQuantity);
+        itemToUpdate.setQuantity(updateRequest.getQuantity());
         Order updatedOrder = orderRepository.save(order);
 
         return enrichOrderResponseAsync(orderMapper.toDto(updatedOrder));
@@ -219,6 +183,10 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        if (order.isLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
+        }
 
         OrderItem itemToRemove = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
@@ -237,6 +205,10 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        if (order.isLocked()) {
+            throw new IllegalStateException("Cannot delete order because it has been checked out");
+        }
 
         orderRepository.delete(order);
     }
