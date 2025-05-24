@@ -484,4 +484,24 @@ class MejaServiceImplTest {
         assertFalse(result.isActive());
         assertEquals("Session created successfully", result.getMessage());
     }
+
+    @Test
+    void testCreateTableSessionWhenSecondFindByIdFails() {
+        when(mejaRepository.findById(uuid))
+                .thenReturn(Optional.of(meja))
+                .thenReturn(Optional.empty());
+
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+
+        CompletionException completionException = assertThrows(
+                CompletionException.class,
+                () -> future.join()
+        );
+
+        assertTrue(completionException.getCause() instanceof MejaNotFoundException);
+        assertTrue(completionException.getCause().getMessage().contains("tidak ditemukan"));
+
+        verify(mejaRepository, times(2)).findById(uuid);
+        verify(tableSessionGrpcClient, never()).createTableSession(anyString());
+    }
 }
