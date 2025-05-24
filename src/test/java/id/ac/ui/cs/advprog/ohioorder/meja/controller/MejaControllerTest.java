@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder.meja.controller;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,6 +37,7 @@ class MejaControllerTest {
     private UUID uuid;
     private MejaRequest mejaRequest;
     private MejaResponse mejaResponse;
+    private TableSessionResponse tableSessionResponse;
 
     @BeforeEach
     void setUp() {
@@ -48,6 +51,13 @@ class MejaControllerTest {
                 .id(uuid)
                 .nomorMeja("A1")
                 .status(MejaStatus.TERSEDIA)
+                .build();
+                
+        tableSessionResponse = TableSessionResponse.builder()
+                .tableId(uuid.toString())
+                .sessionId("session-123")
+                .isActive(true)
+                .message("Session created successfully")
                 .build();
     }
 
@@ -192,5 +202,39 @@ class MejaControllerTest {
         assertEquals(1, responseEntity.getBody().size());
         
         verify(mejaService).getAvailableMeja();
+    }
+
+    @Test
+    void testGetMejaStatusReturnsStatus() {
+        when(mejaService.getMejaById(uuid)).thenReturn(mejaResponse);
+
+        ResponseEntity<MejaStatus> responseEntity = mejaController.getMejaStatus(uuid);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(MejaStatus.TERSEDIA, responseEntity.getBody());
+
+        verify(mejaService).getMejaById(uuid);
+    }
+
+    @Test
+    void testCreateTableSessionReturnsSessionResponse() {
+        UUID id = UUID.randomUUID();
+        TableSessionResponse response = TableSessionResponse.builder()
+                .tableId(id.toString())
+                .sessionId("session-123")
+                .isActive(true)
+                .message("Session created successfully")
+                .build();
+                
+        when(mejaService.createTableSession(id)).thenReturn(CompletableFuture.completedFuture(response));
+
+        CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = mejaController.createTableSession(id);
+        ResponseEntity<TableSessionResponse> result = resultFuture.join();
+        
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(response, result.getBody());
+        
+        verify(mejaService).createTableSession(id);
     }
 }

@@ -1,8 +1,11 @@
+import com.google.protobuf.gradle.id
+
 plugins {
     java
     jacoco
     id("org.springframework.boot") version "3.4.4"
     id("io.spring.dependency-management") version "1.1.7"
+    id("com.google.protobuf") version "0.9.4"
 }
 
 group = "id.ac.ui.cs.advprog"
@@ -29,11 +32,22 @@ val seleniumJupiterVersion = "5.0.1"
 val webdrivermanagerVersion = "5.6.3"
 val junitJupiterVersion = "5.9.1"
 
+val grpcVersion = "1.64.0"
+val protobufVersion = "3.25.1"
+val springGrpcVersion = "0.4.0"
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    // gRPC dependencies
+    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter:0.4.0")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
+    compileOnly("javax.annotation:javax.annotation-api:1.3.2")
 
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -60,7 +74,34 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
 
     implementation("com.h2database:h2")
+
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+    plugins {
+        id("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+    }
+    generateProtoTasks {
+        all().forEach {
+            it.plugins {
+                id("grpc")
+            }
+        }
+    }
+}
+
+// Include generated Java and gRPC stubs
+//sourceSets["main"].java.srcDirs(
+//    "build/generated/source/proto/main/grpc",
+//    "build/generated/source/proto/main/java"
+//)
 
 tasks.test {
     finalizedBy(tasks.jacocoTestReport)

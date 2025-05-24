@@ -1,15 +1,17 @@
 package id.ac.ui.cs.advprog.ohioorder.meja.service;
 
+import id.ac.ui.cs.advprog.ohioorder.grpc.TableSessionGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaAlreadyExistsException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
+import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotAvailableException;
 import id.ac.ui.cs.advprog.ohioorder.meja.factory.MejaResponseFactory;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
-import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaServiceImpl;
 import id.ac.ui.cs.advprog.ohioorder.meja.validation.MejaRequestValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +19,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import table_session.TableSessionOuterClass;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,6 +45,9 @@ class MejaServiceImplTest {
 
     @Mock
     private MejaRequestValidator validator;
+    
+    @Mock
+    private TableSessionGrpcClient tableSessionGrpcClient;
 
     @InjectMocks
     private MejaServiceImpl mejaService;
@@ -48,6 +56,7 @@ class MejaServiceImplTest {
     private Meja meja;
     private MejaRequest mejaRequest;
     private MejaResponse mejaResponse;
+    private TableSessionOuterClass.TableSessionResponse grpcResponse;
 
     @BeforeEach
     void setUp() {
@@ -67,6 +76,16 @@ class MejaServiceImplTest {
                 .id(uuid)
                 .nomorMeja("A1")
                 .status(MejaStatus.TERSEDIA)
+                .build();
+                
+        TableSessionOuterClass.TableSession tableSession = TableSessionOuterClass.TableSession.newBuilder()
+                .setId("session-123")
+                .setTableId(uuid.toString())
+                .setIsActive(true)
+                .build();
+                
+        grpcResponse = TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(tableSession)
                 .build();
     }
 
@@ -382,5 +401,107 @@ class MejaServiceImplTest {
         verify(mejaRepository).findAll();
         verify(responseFactory).createFromEntity(meja);
         verify(responseFactory, never()).createFromEntity(meja2);
+    }
+
+    @Test
+    void testCreateTableSessionSuccessWhenMejaAvailable() {
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
+        when(tableSessionGrpcClient.createTableSession(uuid.toString())).thenReturn(grpcResponse);
+        when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
+        
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.createTableSession(uuid);
+ 
+        TableSessionResponse result = resultFuture.join();
+        
+        assertNotNull(result);
+        assertEquals(uuid.toString(), result.getTableId());
+        assertEquals("session-123", result.getSessionId());
+        assertTrue(result.isActive());
+        assertEquals("Session created successfully", result.getMessage());
+        
+        verify(mejaRepository, times(2)).findById(uuid);
+        verify(tableSessionGrpcClient).createTableSession(uuid.toString());
+        assertEquals(MejaStatus.TERISI, meja.getStatus());
+    }
+    
+    @Test
+    void testCreateTableSessionThrowsExceptionWhenMejaNotFound() {
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
+        
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+        
+        CompletionException completionException = assertThrows(
+            CompletionException.class, 
+            () -> future.join()
+        );
+        
+        assertTrue(completionException.getCause() instanceof MejaNotFoundException);
+        
+        verify(mejaRepository).findById(uuid);
+        verify(tableSessionGrpcClient, never()).createTableSession(anyString());
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
+    
+    @Test
+    void testCreateTableSessionThrowsExceptionWhenMejaNotAvailable() {
+        Meja busyMeja = Meja.builder()
+                .id(uuid)
+                .nomorMeja("A1")
+                .status(MejaStatus.TERISI)
+                .build();
+        
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(busyMeja));
+        
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+        
+        CompletionException completionException = assertThrows(
+            CompletionException.class, 
+            () -> future.join()
+        );
+        
+        assertTrue(completionException.getCause() instanceof MejaNotAvailableException);
+        
+        verify(mejaRepository).findById(uuid);
+        verify(tableSessionGrpcClient, never()).createTableSession(anyString());
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
+
+    @Test
+    void testCreateTableSessionWithEmptyGrpcResponse() {
+        TableSessionOuterClass.TableSessionResponse emptyGrpcResponse =
+                TableSessionOuterClass.TableSessionResponse.newBuilder().build();
+
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
+        when(tableSessionGrpcClient.createTableSession(uuid.toString())).thenReturn(emptyGrpcResponse);
+        when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
+
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.createTableSession(uuid);
+        TableSessionResponse result = resultFuture.join();
+
+        assertNotNull(result);
+        assertEquals(uuid.toString(), result.getTableId());
+        assertEquals("", result.getSessionId());
+        assertFalse(result.isActive());
+        assertEquals("Session created successfully", result.getMessage());
+    }
+
+    @Test
+    void testCreateTableSessionWhenSecondFindByIdFails() {
+        when(mejaRepository.findById(uuid))
+                .thenReturn(Optional.of(meja))
+                .thenReturn(Optional.empty());
+
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+
+        CompletionException completionException = assertThrows(
+                CompletionException.class,
+                () -> future.join()
+        );
+
+        assertTrue(completionException.getCause() instanceof MejaNotFoundException);
+        assertTrue(completionException.getCause().getMessage().contains("tidak ditemukan"));
+
+        verify(mejaRepository, times(2)).findById(uuid);
+        verify(tableSessionGrpcClient, never()).createTableSession(anyString());
     }
 }

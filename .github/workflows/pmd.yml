@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
 
       - name: Run PMD
         uses: pmd/pmd-github-action@d9c1f3c5940cbf5923f1354e83fa858b4496ebaa

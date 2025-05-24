@@ -1,21 +1,25 @@
 package id.ac.ui.cs.advprog.ohioorder.meja.service;
 
+import id.ac.ui.cs.advprog.ohioorder.grpc.TableSessionGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaRequest;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
+import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
-import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaAlreadyExistsException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaHasPesananException;
 import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotFoundException;
+import id.ac.ui.cs.advprog.ohioorder.meja.exception.MejaNotAvailableException;
 import id.ac.ui.cs.advprog.ohioorder.meja.factory.MejaResponseFactory;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
-import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
 import id.ac.ui.cs.advprog.ohioorder.meja.validation.MejaRequestValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import table_session.TableSessionOuterClass;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +29,7 @@ public class MejaServiceImpl implements MejaService {
     private final MejaRepository mejaRepository;
     private final MejaRequestValidator validator;
     private final MejaResponseFactory responseFactory;
+    private final TableSessionGrpcClient tableSessionGrpcClient;
 
     @Override
     public MejaResponse createMeja(MejaRequest request) {
@@ -119,5 +124,36 @@ public class MejaServiceImpl implements MejaService {
                 .filter(Meja::isAvailable)
                 .map(this::mapToMejaResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Async
+    @Override
+    public CompletableFuture<TableSessionResponse> createTableSession(UUID id) {
+        try {
+            if (!isMejaAvailable(id)) {
+                throw new MejaNotAvailableException("Meja dengan ID " + id + " tidak tersedia untuk reservasi");
+            }
+
+            Meja meja = mejaRepository.findById(id)
+                    .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+
+            TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.createTableSession(meja.getId().toString());
+
+            meja.setStatus(MejaStatus.TERISI);
+            mejaRepository.save(meja);
+
+            TableSessionResponse response = TableSessionResponse.builder()
+                    .tableId(meja.getId().toString())
+                    .sessionId(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getId() : "")
+                    .isActive(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getIsActive() : false)
+                    .message("Session created successfully")
+                    .build();
+                    
+            return CompletableFuture.completedFuture(response);
+        } catch (Exception e) {
+            CompletableFuture<TableSessionResponse> failedFuture = new CompletableFuture<>();
+            failedFuture.completeExceptionally(e);
+            return failedFuture;
+        }
     }
 }
