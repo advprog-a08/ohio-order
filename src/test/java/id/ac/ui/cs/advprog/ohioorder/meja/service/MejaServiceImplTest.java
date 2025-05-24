@@ -465,4 +465,23 @@ class MejaServiceImplTest {
         verify(tableSessionGrpcClient, never()).createTableSession(anyString());
         verify(mejaRepository, never()).save(any(Meja.class));
     }
+
+    @Test
+    void testCreateTableSessionWithEmptyGrpcResponse() {
+        TableSessionOuterClass.TableSessionResponse emptyGrpcResponse =
+                TableSessionOuterClass.TableSessionResponse.newBuilder().build();
+
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
+        when(tableSessionGrpcClient.createTableSession(uuid.toString())).thenReturn(emptyGrpcResponse);
+        when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
+
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.createTableSession(uuid);
+        TableSessionResponse result = resultFuture.join();
+
+        assertNotNull(result);
+        assertEquals(uuid.toString(), result.getTableId());
+        assertEquals("", result.getSessionId());
+        assertFalse(result.isActive());
+        assertEquals("Session created successfully", result.getMessage());
+    }
 }
