@@ -11,7 +11,7 @@ public class MejaConfig {
     private final int maxTableCount = 100; 
     
     @Getter
-    private final String tablePrefix = "T"; // Prefix for table numbers
+    private final String tablePrefix = "A"; // Default prefix for table numbers and validation
     
     private MejaConfig() {
         // Private constructor to prevent instantiation
@@ -23,14 +23,15 @@ public class MejaConfig {
         }
         return instance;
     }
-    
+
+    // Default table number generator
     public String generateTableNumber(int number) {
         return tablePrefix + number;
     }
     
     public boolean isValidTableNumber(String nomorMeja) {
         // Table number should start with the prefix and be followed by a number
-        if (!nomorMeja.startsWith(tablePrefix)) {
+        if (!nomorMeja.matches("^[A-Z]\\d+$")) {
             return false;
         }
         
