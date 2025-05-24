@@ -49,7 +49,6 @@ public class CheckoutServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Set up order with items
         orderId = UUID.randomUUID();
         checkoutId = UUID.randomUUID();
 
@@ -72,7 +71,6 @@ public class CheckoutServiceTest {
         order.addOrderItem(orderItem1);
         order.addOrderItem(orderItem2);
 
-        // Set up checkout
         checkout = new Checkout();
         checkout.setId(checkoutId);
         checkout.setOrder(order);

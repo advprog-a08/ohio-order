@@ -7,6 +7,8 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -158,12 +161,39 @@ class CheckoutControllerTest {
 
     @Test
     void next_shouldReturn200_whenNextIsSuccessful() throws Exception {
-        String orderId = UUID.randomUUID().toString();
+        String checkoutId = UUID.randomUUID().toString();
+
+        Order order = new Order();
+        order.setId(UUID.randomUUID());
+        order.setOrderItems(new ArrayList<>());
+
+        OrderItem item1 = OrderItem.builder()
+                .id(UUID.randomUUID())
+                .menuItemId("menu-1")
+                .quantity(2)
+                .build();
+
+        OrderItem item2 = OrderItem.builder()
+                .id(UUID.randomUUID())
+                .menuItemId("menu-2")
+                .quantity(1)
+                .build();
+
+        order.addOrderItem(item1);
+        order.addOrderItem(item2);
 
         mockCheckout.setState(CheckoutStateType.DRAFT);
-        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
+        mockCheckout.setOrder(order);
 
-        mockMvc.perform(post("/api/checkout/next/{checkoutId}", orderId))
+        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(checkoutId);
+
+        doAnswer(invocation -> {
+            Checkout checkout = invocation.getArgument(0);
+            checkout.setState(CheckoutStateType.ORDERED);
+            return checkout;
+        }).when(checkoutService).save(any(Checkout.class));
+
+        mockMvc.perform(post("/api/checkout/next/{checkoutId}", checkoutId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()));
     }
