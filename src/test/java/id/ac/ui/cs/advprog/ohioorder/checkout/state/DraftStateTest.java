@@ -35,7 +35,6 @@ public class DraftStateTest {
         checkout.setState(CheckoutStateType.DRAFT);
         checkout.initializeState();
 
-        // Set up mocks
         mockContext = mock(ApplicationContext.class);
         mockCheckoutService = mock(CheckoutServiceImpl.class);
         mockValidator = mock(MenuItemQuantityValidator.class);
@@ -44,7 +43,6 @@ public class DraftStateTest {
         when(mockContext.getBean(CheckoutService.class)).thenReturn(mockCheckoutService);
         when(mockValidator.validateOrderItemsQuantity(order)).thenReturn(List.of());
 
-        // Set application context to DraftState
         DraftState.getInstance().setApplicationContext(mockContext);
     }
 
@@ -68,17 +66,13 @@ public class DraftStateTest {
 
     @Test
     void next_LocksOrder_WhenTransitioningToOrdered() {
-        // Verify order is not locked initially
         assertFalse(order.isLocked());
 
-        // Mock the checkout service
         doNothing().when(mockCheckoutService).validateQuantitiesBeforeNextState(checkout);
         doNothing().when(mockCheckoutService).reduceMenuItemQuantities(checkout);
 
-        // Transition to ORDERED state
         checkout.nextState();
 
-        // Verify order gets locked
         verify(order).setLocked(true);
         assertEquals(CheckoutStateType.ORDERED, checkout.getState());
     }
