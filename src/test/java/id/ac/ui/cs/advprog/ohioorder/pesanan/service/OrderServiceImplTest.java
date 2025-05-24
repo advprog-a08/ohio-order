@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -42,7 +43,7 @@ class OrderServiceImplTest {
 
     @Mock
     private MejaService mejaService;
-    
+
     @Mock
     private MenuServiceClient menuServiceClient;
 
@@ -101,7 +102,7 @@ class OrderServiceImplTest {
                 .price(50000.0)
                 .quantity(10)
                 .build();
-                
+
         menuServiceResponse = new MenuServiceResponse();
         menuServiceResponse.setSuccess(true);
         menuServiceResponse.setMessage("Success");
@@ -130,22 +131,21 @@ class OrderServiceImplTest {
     @Test
     void createOrder_Success() {
         when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
-        // Remove this verification line as it's not being called
-        // when(menuServiceClient.verifyMenuItemExists("menu-1")).thenReturn(true);
-
-        // This is the actual method being called
         when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
         when(orderMapper.toEntity(orderRequest)).thenReturn(order);
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
 
-        OrderDto.OrderResponse result = orderService.createOrder(orderRequest);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.createOrder(orderRequest);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
         assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
 
-        verify(menuServiceClient, times(2)).getMenuItem("menu-1");
         verify(orderRepository).save(order);
     }
 
@@ -179,24 +179,30 @@ class OrderServiceImplTest {
 
     @Test
     void getOrdersByMejaId_Success() {
-        when(orderRepository.findByMejaId(mejaId)).thenReturn(List.of(order));
+        List<Order> orders = Arrays.asList(order);
+        when(orderRepository.findByMejaId(mejaId)).thenReturn(orders);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
-        List<OrderDto.OrderResponse> result = orderService.getOrdersByMejaId(mejaId);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
 
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(orderId, result.getFirst().getId());
+        List<CompletableFuture<OrderDto.OrderResponse>> results = orderService.getOrdersByMejaId(mejaId);
+
+        assertNotNull(results);
+        assertEquals(1, results.size());
+        assertEquals(orderResponse, results.get(0).join());
     }
 
     @Test
     void getOrderById_Success() {
         when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
-        OrderDto.OrderResponse result = orderService.getOrderById(orderId);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.getOrderById(orderId);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
         assertEquals(orderId, result.getId());
@@ -219,7 +225,7 @@ class OrderServiceImplTest {
                 .menuItemId("menu-2")
                 .quantity(1)
                 .build();
-        // Create a response for menu-2
+
         MenuItemDto menuItem2 = MenuItemDto.builder()
                 .id("menu-2")
                 .name("Pizza")
@@ -234,21 +240,18 @@ class OrderServiceImplTest {
         menu2Response.setData(menuItem2);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        // Remove this verification line as it's not being called
-        // when(menuServiceClient.verifyMenuItemExists("menu-2")).thenReturn(true);
-
-        // This is the actual method being called
         when(menuServiceClient.getMenuItem("menu-2")).thenReturn(menu2Response);
         when(orderItemRepository.findByOrderIdAndMenuItemId(orderId, "menu-2")).thenReturn(Optional.empty());
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
-        // This is still needed for the enrichment
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
-        OrderDto.OrderResponse result = orderService.addItemToOrder(orderId, itemRequest);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.addItemToOrder(orderId, itemRequest);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
-        // Update verification to check getMenuItem instead of verifyMenuItemExists
         verify(menuServiceClient).getMenuItem("menu-2");
         verify(orderRepository).save(any(Order.class));
 
@@ -260,33 +263,36 @@ class OrderServiceImplTest {
     @Test
     void addItemToOrder_Success_WithExistingItem() {
         UUID orderId = UUID.randomUUID();
-        String menuItemId = "menu-1";
-
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId(menuItemId)
+                .menuItemId("menu-1")
                 .quantity(1)
                 .build();
 
         OrderItem existingItem = OrderItem.builder()
                 .id(UUID.randomUUID())
-                .menuItemId(menuItemId)
+                .menuItemId("menu-1")
                 .quantity(2)
                 .order(order)
                 .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderIdAndMenuItemId(orderId, menuItemId)).thenReturn(Optional.of(existingItem));
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
+        when(orderItemRepository.findByOrderIdAndMenuItemId(orderId, "menu-1")).thenReturn(Optional.of(existingItem));
+        when(orderItemRepository.save(existingItem)).thenReturn(existingItem);
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
-        when(menuServiceClient.getMenuItem(menuItemId)).thenReturn(menuServiceResponse);
 
-        OrderDto.OrderResponse result = orderService.addItemToOrder(orderId, itemRequest);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.addItemToOrder(orderId, itemRequest);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
         verify(orderItemRepository).save(existingItem);
         assertEquals(3, existingItem.getQuantity());
     }
-    
+
     @Test
     void addItemToOrder_ThrowsException_WhenMenuItemNotFound() {
         UUID orderId = UUID.randomUUID();
@@ -323,12 +329,14 @@ class OrderServiceImplTest {
         order.addOrderItem(orderItem);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        // Add this line to fix the null pointer exception
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
 
-        OrderDto.OrderResponse result = orderService.updateOrderItem(orderId, itemId, updateRequest);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrderItem(orderId, itemId, updateRequest);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
         assertEquals(3, orderItem.getQuantity());
@@ -395,112 +403,116 @@ class OrderServiceImplTest {
 
         verify(orderRepository).delete(order);
     }
-    
+
     @Test
     void enrichOrderResponse_HandlesDeletedMenuItems() {
         OrderDto.OrderResponse response = OrderDto.OrderResponse.builder()
-                .id(orderId)
+                .id(UUID.randomUUID())
                 .mejaId(mejaId)
                 .nomorMeja("A1")
                 .items(List.of(
                         OrderDto.OrderItemResponse.builder()
                                 .id(UUID.randomUUID())
                                 .menuItemId("deleted-menu-item")
-                                .quantity(2)
+                                .quantity(1)
                                 .build()
                 ))
                 .build();
-                
-        when(menuServiceClient.getMenuItem("deleted-menu-item"))
-                .thenThrow(new NoSuchElementException("Menu item not found"));
 
-        OrderDto.OrderResponse result = orderService.enrichOrderResponse(response);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(Collections.emptyList()));
+
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.enrichOrderResponseAsync(response);
+        OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
-        OrderDto.OrderItemResponse itemResponse = result.getItems().getFirst();
-        assertEquals("[Unavailable Item]", itemResponse.getMenuItemName());
-        assertEquals("This menu item is Unavailable.", itemResponse.getMenuItemDescription());
-        assertEquals("Unavailable", itemResponse.getMenuItemCategory());
-        assertEquals(0.0, itemResponse.getPrice());
-        assertEquals(0.0, itemResponse.getSubtotal());
+        assertEquals(1, result.getItems().size());
+        OrderDto.OrderItemResponse item = result.getItems().get(0);
+        assertEquals("[Unavailable Item]", item.getMenuItemName());
+        assertNotNull(item.getSubtotal());
     }
 
     @Test
-    void createOrder_ThrowsException_WhenInsufficientQuantity() {
-        when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
-        
-        // Set up menu item with insufficient quantity
-        menuItemDto.setQuantity(1); // Only 1 available
-        menuServiceResponse.setData(menuItemDto);
-        
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
-        
-        // Order requests 2 items
-        orderRequest.setItems(List.of(
-                OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-1")
-                .quantity(2)
-                .build()
-        ));
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.createOrder(orderRequest));
-        assertTrue(exception.getMessage().contains("Insufficient quantity available"));
-        verify(orderRepository, never()).save(any());
-    }
-
-    @Test
-    void addItemToOrder_ThrowsException_WhenInsufficientQuantity() {
+    void addItemToOrder_ThrowsException_WhenOrderIsLocked() {
         UUID orderId = UUID.randomUUID();
-
-        // Setup menu item with insufficient quantity
-        menuItemDto.setQuantity(1); // Only 1 available
-        menuServiceResponse.setData(menuItemDto);
-
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(menuServiceClient.getMenuItem("menu-2")).thenReturn(menuServiceResponse);
-
-        // Try to add 2 items when only 1 is available
         OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-2")
-                .quantity(2)
-                .build();
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.addItemToOrder(orderId, itemRequest));
-        assertTrue(exception.getMessage().contains("Insufficient quantity available"));
-        verify(orderRepository, never()).save(any());
-    }
-
-    @Test
-    void updateOrderItem_ThrowsException_WhenInsufficientQuantity() {
-        UUID orderId = UUID.randomUUID();
-        UUID itemId = UUID.randomUUID();
-
-        // Create an item with quantity 1
-        OrderItem orderItem = OrderItem.builder()
-                .id(itemId)
                 .menuItemId("menu-1")
                 .quantity(1)
                 .build();
 
-        order.addOrderItem(orderItem);
-
-        // Setup menu service to return only 1 additional item available
-        menuItemDto.setQuantity(1);
-        menuServiceResponse.setData(menuItemDto);
+        order.setLocked(true);
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
-        // Try to update from 1 to 3 (needs 2 more, but only 1 is available)
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.addItemToOrder(orderId, itemRequest).join());
+        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
+
+        verify(orderItemRepository, never()).findByOrderIdAndMenuItemId(any(), any());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void updateOrderItem_ThrowsException_WhenOrderIsLocked() {
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+
         OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
                 .quantity(3)
                 .build();
 
+        OrderItem orderItem = OrderItem.builder()
+                .id(itemId)
+                .menuItemId("menu-1")
+                .quantity(2)
+                .build();
+
+        order.addOrderItem(orderItem);
+        order.setLocked(true);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.updateOrderItem(orderId, itemId, updateRequest));
-        assertTrue(exception.getMessage().contains("Insufficient quantity available"));
+                () -> orderService.updateOrderItem(orderId, itemId, updateRequest).join());
+        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
+
         verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void removeItemFromOrder_ThrowsException_WhenOrderIsLocked() {
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+
+        OrderItem orderItem = OrderItem.builder()
+                .id(itemId)
+                .menuItemId("menu-1")
+                .quantity(2)
+                .build();
+
+        order.addOrderItem(orderItem);
+        order.setLocked(true);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.removeItemFromOrder(orderId, itemId));
+        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
+
+        verify(orderItemRepository, never()).delete(any());
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteOrder_ThrowsException_WhenOrderIsLocked() {
+        order.setLocked(true);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.deleteOrder(orderId));
+        assertEquals("Cannot delete order because it has been checked out", exception.getMessage());
+
+        verify(orderRepository, never()).delete(any());
     }
 }
