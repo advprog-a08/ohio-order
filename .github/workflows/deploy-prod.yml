@@ -42,6 +42,8 @@ jobs:
       - name: SSH and redeploy on VM in K3S
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-                #   Reroll Deployment
-                sudo kubectl rollout restart deployment ohio-order -n default
+            cd ~/k8s-config
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d
           EOF

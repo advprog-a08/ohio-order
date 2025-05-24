@@ -73,6 +73,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
 
     implementation("com.h2database:h2")
+
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 protobuf {
