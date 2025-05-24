@@ -30,6 +30,10 @@ public class MejaConfig {
     }
     
     public boolean isValidTableNumber(String nomorMeja) {
+        if (nomorMeja == null || nomorMeja.trim().isEmpty()) {
+            return false;
+        }
+
         // Table number should start with the prefix and be followed by a number
         if (!nomorMeja.matches("^[A-Z]\\d+$")) {
             return false;
