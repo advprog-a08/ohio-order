@@ -3,6 +3,11 @@ package id.ac.ui.cs.advprog.ohioorder.meja.exception;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -81,4 +86,67 @@ class GlobalExceptionHandlerTest {
         assertEquals(errorMessage, errorResponse.message());
         assertNotNull(errorResponse.timestamp());
     }
+
+    @Test
+    void testHandleValidationExceptions() {
+        Object target = new Object();
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(target, "testObject");
+
+        bindingResult.addError(new FieldError("testObject", "nomorMeja", "Nomor meja tidak boleh kosong"));
+        bindingResult.addError(new FieldError("testObject", "status", "Status tidak valid"));
+
+        MethodArgumentNotValidException exception = new MethodArgumentNotValidException(null, bindingResult);
+
+        ResponseEntity<Map<String, String>> responseEntity =
+                exceptionHandler.handleValidationExceptions(exception);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        Map<String, String> errors = responseEntity.getBody();
+        assertNotNull(errors);
+        assertEquals(2, errors.size());
+        assertEquals("Nomor meja tidak boleh kosong", errors.get("nomorMeja"));
+        assertEquals("Status tidak valid", errors.get("status"));
+    }
+
+    @Test
+    void testHandleValidationExceptionsWithSingleError() {
+        Object target = new Object();
+        BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(target, "testObject");
+
+        bindingResult.addError(new FieldError("testObject", "nomorMeja", "Format nomor meja salah"));
+
+        MethodArgumentNotValidException exception = new MethodArgumentNotValidException(null, bindingResult);
+
+        ResponseEntity<Map<String, String>> responseEntity =
+                exceptionHandler.handleValidationExceptions(exception);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        Map<String, String> errors = responseEntity.getBody();
+        assertNotNull(errors);
+        assertEquals(1, errors.size());
+        assertEquals("Format nomor meja salah", errors.get("nomorMeja"));
+    }
+
+    @Test
+    void testHandleInvalidRequestException() {
+        String errorMessage = "Request tidak valid";
+        InvalidRequestException exception = new InvalidRequestException(errorMessage);
+
+        ResponseEntity<GlobalExceptionHandler.ErrorResponse> responseEntity =
+                exceptionHandler.handleInvalidRequestException(exception);
+
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        GlobalExceptionHandler.ErrorResponse errorResponse = responseEntity.getBody();
+        assertNotNull(errorResponse);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), errorResponse.status());
+        assertEquals(errorMessage, errorResponse.message());
+        assertNotNull(errorResponse.timestamp());
+    }
+
 }
