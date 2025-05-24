@@ -35,8 +35,7 @@ public class MejaRequestValidator extends RequestValidator<MejaRequest> {
     
     private void validateNomorMejaFormat(MejaRequest request) {
         if (!mejaConfig.isValidTableNumber(request.getNomorMeja())) {
-            throw new InvalidRequestException("Nomor meja tidak valid. Format yang benar adalah " + 
-                    mejaConfig.getTablePrefix() + "X, dimana X adalah angka antara 1 dan " + mejaConfig.getMaxTableCount());
+            throw new InvalidRequestException("Nomor meja tidak valid. Format yang benar adalah *X, dimana * adalah alfabet A-Z dan X adalah angka antara 1 dan " + mejaConfig.getMaxTableCount());
         }
     }
     
