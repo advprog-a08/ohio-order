@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.pesanan.controller;
 
+import id.ac.ui.cs.advprog.ohioorder.model.TableSession;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +38,15 @@ class OrderControllerTest {
     private UUID orderItemResponseId;
     private OrderDto.OrderItemRequest itemRequest;
     private OrderDto.UpdateOrderItemRequest updateItemRequest;
+    private TableSession mockTableSession;
 
     @BeforeEach
     void setUp() {
         mejaId = UUID.randomUUID();
 
+        mockTableSession = new TableSession("session-123", mejaId.toString(), true);
+
         orderRequest = OrderDto.OrderRequest.builder()
-                .mejaId(mejaId)
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
                                 .menuItemId("menu-1")
@@ -85,12 +88,11 @@ class OrderControllerTest {
 
     @Test
     void createOrder_Success() {
-        // Mock the CompletableFuture return type
-        when(orderService.createOrder(any(OrderDto.OrderRequest.class)))
+        when(orderService.createOrder(any(OrderDto.OrderRequest.class), eq(mejaId)))
                 .thenReturn(CompletableFuture.completedFuture(orderResponse));
 
         ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.createOrder(orderRequest);
+                orderController.createOrder(mockTableSession, orderRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -100,20 +102,18 @@ class OrderControllerTest {
         assertNotNull(future);
         assertEquals(orderResponse, future.join());
 
-        verify(orderService).createOrder(orderRequest);
+        verify(orderService).createOrder(orderRequest, mejaId);
     }
 
     @Test
-    void getOrdersByMejaId_Success() {
-        String mejaIdStr = mejaId.toString();
-
+    void getOrdersByTableSession_Success() {
         List<CompletableFuture<OrderDto.OrderResponse>> futureResponses =
                 List.of(CompletableFuture.completedFuture(orderResponse));
 
         when(orderService.getOrdersByMejaId(mejaId)).thenReturn(futureResponses);
 
         ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> response =
-                orderController.getOrdersByMejaId(mejaIdStr);
+                orderController.getOrdersByTableSession(mockTableSession);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -130,8 +130,7 @@ class OrderControllerTest {
     void getOrderById_Success() {
         UUID orderId = UUID.randomUUID();
 
-        when(orderService.getOrderById(orderId))
-                .thenReturn(CompletableFuture.completedFuture(orderResponse));
+        when(orderService.getOrderById(orderId)).thenReturn(CompletableFuture.completedFuture(orderResponse));
 
         ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
                 orderController.getOrderById(orderId);
@@ -196,7 +195,8 @@ class OrderControllerTest {
         UUID itemId = UUID.randomUUID();
         when(orderService.removeItemFromOrder(orderId, itemId)).thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response = orderController.removeItemFromOrder(orderId, itemId);
+        ResponseEntity<OrderDto.OrderResponse> response =
+                orderController.removeItemFromOrder(orderId, itemId);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
