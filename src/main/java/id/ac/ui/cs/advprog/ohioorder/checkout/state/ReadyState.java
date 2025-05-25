@@ -13,7 +13,7 @@ public class ReadyState implements CheckoutState {
     }
 
     @Override
-    public void next(Checkout checkout) throws InvalidStateTransitionException {
+    public void advance(Checkout checkout) throws InvalidStateTransitionException {
         checkout.setState(CheckoutStateType.COMPLETED);
     }
 

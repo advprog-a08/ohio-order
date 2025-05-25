@@ -19,8 +19,8 @@ public class CompletedStateTest {
     }
 
     @Test
-    void testNextTransitionNoChange() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.nextState());
+    void testAdvanceTransitionNoChange() {
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.advance());
     }
 
     @Test

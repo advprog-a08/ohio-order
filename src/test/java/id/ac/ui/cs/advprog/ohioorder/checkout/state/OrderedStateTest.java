@@ -19,8 +19,8 @@ public class OrderedStateTest {
     }
 
     @Test
-    void testNextTransitionToCompleted() {
-        checkout.nextState();
+    void testAdvanceTransitionToCompleted() {
+        checkout.advance();
         assertEquals(CheckoutStateType.PREPARING, checkout.getState());
         assertEquals(checkout.getCheckoutState(), PreparingState.getInstance());
     }

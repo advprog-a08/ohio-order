@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
-import id.ac.ui.cs.advprog.ohioorder.checkout.state.DraftState;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -40,8 +39,8 @@ public class Checkout {
         return state.getCheckoutState();
     }
 
-    public void nextState() {
-        state.getCheckoutState().next(this);
+    public void advance() {
+        state.getCheckoutState().advance(this);
     }
 
     public void cancel() throws InvalidStateTransitionException {

@@ -12,7 +12,7 @@ public class CompletedState implements CheckoutState {
     }
 
     @Override
-    public void next(Checkout checkout) throws InvalidStateTransitionException {
+    public void advance(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot proceed order in completed state");
     }
 

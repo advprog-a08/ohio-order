@@ -31,12 +31,12 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    @PostMapping("next/{checkoutId}")
-    public ResponseEntity<?> next(@PathVariable String checkoutId) {
+    @PostMapping("advance/{checkoutId}")
+    public ResponseEntity<?> advance(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
                     try {
-                        checkout.nextState();
+                        checkout.advance();
                         checkoutService.save(checkout);
                     } catch (InvalidStateTransitionException | InsufficientQuantityException e) {
                         return ResponseEntity.badRequest().body(e.getMessage());

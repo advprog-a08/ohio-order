@@ -7,8 +7,6 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
-import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +17,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -160,7 +157,7 @@ class CheckoutControllerTest {
     }
 
     @Test
-    void next_shouldReturn200_whenNextIsSuccessful() throws Exception {
+    void advance_shouldReturn200_whenNextIsSuccessful() throws Exception {
         String checkoutId = UUID.randomUUID().toString();
 
         Checkout spyCheckout = spy(new Checkout());
@@ -169,23 +166,23 @@ class CheckoutControllerTest {
         doAnswer(invocation -> {
             spyCheckout.setState(CheckoutStateType.ORDERED);
             return null;
-        }).when(spyCheckout).nextState();
+        }).when(spyCheckout).advance();
 
         doReturn(Optional.of(spyCheckout)).when(checkoutService).findById(checkoutId);
 
-        mockMvc.perform(post("/api/checkout/next/{checkoutId}", checkoutId))
+        mockMvc.perform(post("/api/checkout/advance/{checkoutId}", checkoutId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()));
     }
 
     @Test
-    void next_shouldReturn400_whenNextIsNotSuccessful() throws Exception {
+    void advance_shouldReturn400_whenNextIsNotSuccessful() throws Exception {
         String orderId = UUID.randomUUID().toString();
 
-        mockCheckout.setState(CheckoutStateType.CANCELLED);  // Cancelled cannot be next'd
+        mockCheckout.setState(CheckoutStateType.CANCELLED);  // Cancelled cannot be advanced
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(post("/api/checkout/next/{checkoutId}", orderId))
+        mockMvc.perform(post("/api/checkout/advance/{checkoutId}", orderId))
                 .andExpect(status().isBadRequest());
     }
 }

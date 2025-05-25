@@ -132,7 +132,7 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    void validateQuantitiesBeforeNextState_Success() {
+    void validateQuantitiesBeforeAdvance_Success() {
         when(quantityValidator.validateOrderItemsQuantity(order)).thenReturn(List.of());
 
         assertDoesNotThrow(() -> checkoutService.validateQuantitiesBeforeNextState(checkout));
@@ -141,7 +141,7 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    void validateQuantitiesBeforeNextState_ThrowsException_WhenInsufficientQuantity() {
+    void validateQuantitiesBeforeAdvance_ThrowsException_WhenInsufficientQuantity() {
         when(quantityValidator.validateOrderItemsQuantity(order))
                 .thenReturn(List.of("Insufficient quantity for menu item 'Pizza'"));
 

@@ -18,8 +18,8 @@ public class CancelledStateTest {
     }
 
     @Test
-    void testNextTransitionToCompleted() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.nextState());
+    void testAdvanceTransitionToCompleted() {
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.advance());
     }
 
     @Test

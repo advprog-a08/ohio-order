@@ -45,8 +45,8 @@ public class DraftStateTest {
     }
 
     @Test
-    void testNextTransitionToOrdered() {
-        checkout.nextState();
+    void testAdvanceTransitionToOrdered() {
+        checkout.advance();
         assertEquals(CheckoutStateType.ORDERED, checkout.getState());
         assertEquals(checkout.getCheckoutState(), OrderedState.getInstance());
     }
@@ -58,13 +58,13 @@ public class DraftStateTest {
     }
 
     @Test
-    void next_LocksOrder_WhenTransitioningToOrdered() {
+    void advance_LocksOrder_WhenTransitioningToOrdered() {
         assertFalse(order.getLocked());
 
         doNothing().when(mockCheckoutService).validateQuantitiesBeforeNextState(checkout);
         doNothing().when(mockCheckoutService).reduceMenuItemQuantities(checkout);
 
-        checkout.nextState();
+        checkout.advance();
 
         verify(order).setLocked(true);
         assertEquals(CheckoutStateType.ORDERED, checkout.getState());
