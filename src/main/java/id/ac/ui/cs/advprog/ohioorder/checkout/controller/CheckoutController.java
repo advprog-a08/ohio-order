@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
@@ -23,21 +24,21 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("create")
+    @PostMapping
     public ResponseEntity<Checkout> create(@RequestBody CheckoutCreateRequest request) {
         return checkoutService.create(request.getOrderId())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    @PostMapping("next/{checkoutId}")
-    public ResponseEntity<?> next(@PathVariable String checkoutId) {
+    @PostMapping("{checkoutId}/advance")
+    public ResponseEntity<?> advance(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
                     try {
-                        checkout.nextState();
+                        checkout.advance();
                         checkoutService.save(checkout);
-                    } catch (InvalidStateTransitionException e) {
+                    } catch (InvalidStateTransitionException | InsufficientQuantityException e) {
                         return ResponseEntity.badRequest().body(e.getMessage());
                     }
 
@@ -46,7 +47,7 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("cancel/{checkoutId}")
+    @DeleteMapping("{checkoutId}")
     public ResponseEntity<?> cancel(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {

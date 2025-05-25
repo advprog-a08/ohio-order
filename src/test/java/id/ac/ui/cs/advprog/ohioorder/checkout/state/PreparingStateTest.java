@@ -16,12 +16,11 @@ public class PreparingStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.PREPARING);
-        checkout.initializeState();
     }
 
     @Test
-    void testNextTransitionToCompleted() {
-        checkout.nextState();
+    void testAdvanceTransitionToCompleted() {
+        checkout.advance();
         assertEquals(CheckoutStateType.READY, checkout.getState());
         assertEquals(checkout.getCheckoutState(), ReadyState.getInstance());
     }
@@ -29,10 +28,5 @@ public class PreparingStateTest {
     @Test
     void testCancelTransitionToCancelled() {
         assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
-    }
-
-    @Test
-    void testUpdateRejected() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.update());
     }
 }

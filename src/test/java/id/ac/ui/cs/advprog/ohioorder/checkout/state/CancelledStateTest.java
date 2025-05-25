@@ -15,21 +15,15 @@ public class CancelledStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.CANCELLED);
-        checkout.initializeState();
     }
 
     @Test
-    void testNextTransitionToCompleted() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.nextState());
+    void testAdvanceTransitionToCompleted() {
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.advance());
     }
 
     @Test
     void testCancelTransitionToCancelled() {
         assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
-    }
-
-    @Test
-    void testUpdateRejected() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.update());
     }
 }

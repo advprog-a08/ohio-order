@@ -9,5 +9,4 @@ public interface CheckoutService {
     Checkout save(Checkout checkout);
     Optional<Checkout> create(UUID orderId);
     Optional<Checkout> findById(String id);
-    void updateById(String id);
 }

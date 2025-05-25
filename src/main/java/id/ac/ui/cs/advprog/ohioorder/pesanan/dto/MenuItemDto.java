@@ -6,13 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class MenuItemDto {
     private String id;
     private String name;
     private String description;
-    private String imageUrl;
     private Double price;
+    private Integer quantity;
 }

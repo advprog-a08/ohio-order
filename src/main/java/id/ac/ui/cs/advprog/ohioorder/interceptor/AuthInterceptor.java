@@ -34,6 +34,13 @@ public class AuthInterceptor implements HandlerInterceptor {
         boolean requiresAdmin = method.hasMethodAnnotation(RequireAdmin.class);
         boolean requiresCustomer = method.hasMethodAnnotation(RequireTableSession.class);
 
+        if (!requiresAdmin && !requiresCustomer) {
+            return true;
+        }
+
+        boolean adminAuthenticated = false;
+        boolean tableSessionAuthenticated = false;
+
         if (requiresAdmin) {
             String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -47,39 +54,37 @@ public class AuthInterceptor implements HandlerInterceptor {
 
                 Admin admin = new Admin(result.getAdmin().getEmail());
                 request.setAttribute("authenticatedAdmin", admin);
-
-                return true;
+                adminAuthenticated = true;
             } catch (RuntimeException e) {
-                response.sendError(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
-                return false;
+                // Invalid admin token, continue to try table session
             }
         }
 
         if (requiresCustomer) {
             String sessionId = request.getHeader("X-Session-Id");
-            if (sessionId == null || sessionId.isEmpty()) {
-                response.sendError(HttpStatus.UNAUTHORIZED.value(), "Missing session ID");
-                return false;
-            }
+            if (sessionId != null && !sessionId.isEmpty()) {
+                try {
+                    TableSessionOuterClass.TableSessionResponse result = tableSessionGrpcClient.verifyTableSession(sessionId);
 
-            try {
-                TableSessionOuterClass.TableSessionResponse result = tableSessionGrpcClient.verifyTableSession(sessionId);
+                    TableSession tableSession = new TableSession(
+                            result.getTableSession().getId(),
+                            result.getTableSession().getTableId(),
+                            result.getTableSession().getIsActive()
+                    );
 
-                TableSession tableSession = new TableSession(
-                        result.getTableSession().getId(),
-                        result.getTableSession().getTableId(),
-                        result.getTableSession().getIsActive()
-                );
-
-                request.setAttribute("authenticatedTableSession", tableSession);
-
-                return true;
-            } catch (RuntimeException e) {
-                response.sendError(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
-                return false;
+                    request.setAttribute("authenticatedTableSession", tableSession);
+                    tableSessionAuthenticated = true;
+                } catch (RuntimeException e) {
+                    // Invalid table session, continue
+                }
             }
         }
 
-        return true;
+        if (adminAuthenticated || tableSessionAuthenticated) {
+            return true;
+        }
+
+        response.sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized: valid admin or table session required");
+        return false;
     }
 }
