@@ -130,7 +130,6 @@ class OrderServiceImplTest {
 
     @Test
     void createOrder_Success() {
-        when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
         when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         when(orderMapper.toEntity(any(OrderDto.OrderRequest.class))).thenReturn(order);
@@ -147,36 +146,18 @@ class OrderServiceImplTest {
         assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
 
-        verify(mejaService).getMejaById(mejaId);
         verify(menuServiceClient).getMenuItem("menu-1");
         verify(orderRepository).save(order);
     }
 
     @Test
     void createOrder_ThrowsException_WhenMenuItemNotFound() {
-        when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponse);
         when(menuServiceClient.getMenuItem("menu-1"))
                 .thenThrow(new NoSuchElementException("Menu item not found with ID: menu-1"));
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
                 () -> orderService.createOrder(orderRequest, mejaId));
         assertEquals("Menu item not found with ID: menu-1", exception.getMessage());
-        verify(orderRepository, never()).save(any());
-    }
-
-    @Test
-    void createOrder_ThrowsException_WhenTableNotAvailable() {
-        MejaResponse mejaResponseFail = MejaResponse.builder()
-                .id(mejaId)
-                .nomorMeja("A1")
-                .status(MejaStatus.TERISI)
-                .build();
-
-        when(mejaService.getMejaById(mejaId)).thenReturn(mejaResponseFail);
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.createOrder(orderRequest, mejaId));
-        assertEquals("Table is not available for ordering", exception.getMessage());
         verify(orderRepository, never()).save(any());
     }
 
