@@ -4,7 +4,7 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
-public class PreparingState implements CheckoutState {
+public class PreparingState extends CheckoutState {
     private static final PreparingState INSTANCE = new PreparingState();
     private PreparingState() {}
 
@@ -15,11 +15,6 @@ public class PreparingState implements CheckoutState {
     @Override
     public void advance(Checkout checkout) throws InvalidStateTransitionException {
         checkout.setState(CheckoutStateType.READY);
-    }
-
-    @Override
-    public void cancel(Checkout checkout) throws InvalidStateTransitionException {
-        throw new InvalidStateTransitionException("Cannot cancel order in preparing state");
     }
 
     @Override
