@@ -40,6 +40,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // gRPC dependencies
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter:0.4.0")
@@ -73,6 +74,9 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
 
     implementation("com.h2database:h2")
+
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 protobuf {

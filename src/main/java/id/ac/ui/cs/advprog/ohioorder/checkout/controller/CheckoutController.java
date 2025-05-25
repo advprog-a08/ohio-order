@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
@@ -37,7 +38,7 @@ public class CheckoutController {
                     try {
                         checkout.nextState();
                         checkoutService.save(checkout);
-                    } catch (InvalidStateTransitionException e) {
+                    } catch (InvalidStateTransitionException | InsufficientQuantityException e) {
                         return ResponseEntity.badRequest().body(e.getMessage());
                     }
 

@@ -57,14 +57,17 @@ public class CheckoutRepositoryTest {
 
         order1 = Order.builder()
                 .meja(meja1)
+                .locked(false)
                 .build();
 
         order2 = Order.builder()
                 .meja(meja2)
+                .locked(false)
                 .build();
 
         order3 = Order.builder()
                 .meja(meja1)
+                .locked(false)
                 .build();
         entityManager.persist(order1);
         entityManager.persist(order2);

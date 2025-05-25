@@ -465,4 +465,43 @@ class MejaServiceImplTest {
         verify(tableSessionGrpcClient, never()).createTableSession(anyString());
         verify(mejaRepository, never()).save(any(Meja.class));
     }
+
+    @Test
+    void testCreateTableSessionWithEmptyGrpcResponse() {
+        TableSessionOuterClass.TableSessionResponse emptyGrpcResponse =
+                TableSessionOuterClass.TableSessionResponse.newBuilder().build();
+
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(meja));
+        when(tableSessionGrpcClient.createTableSession(uuid.toString())).thenReturn(emptyGrpcResponse);
+        when(mejaRepository.save(any(Meja.class))).thenReturn(meja);
+
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.createTableSession(uuid);
+        TableSessionResponse result = resultFuture.join();
+
+        assertNotNull(result);
+        assertEquals(uuid.toString(), result.getTableId());
+        assertEquals("", result.getSessionId());
+        assertFalse(result.isActive());
+        assertEquals("Session created successfully", result.getMessage());
+    }
+
+    @Test
+    void testCreateTableSessionWhenSecondFindByIdFails() {
+        when(mejaRepository.findById(uuid))
+                .thenReturn(Optional.of(meja))
+                .thenReturn(Optional.empty());
+
+        CompletableFuture<TableSessionResponse> future = mejaService.createTableSession(uuid);
+
+        CompletionException completionException = assertThrows(
+                CompletionException.class,
+                () -> future.join()
+        );
+
+        assertTrue(completionException.getCause() instanceof MejaNotFoundException);
+        assertTrue(completionException.getCause().getMessage().contains("tidak ditemukan"));
+
+        verify(mejaRepository, times(2)).findById(uuid);
+        verify(tableSessionGrpcClient, never()).createTableSession(anyString());
+    }
 }

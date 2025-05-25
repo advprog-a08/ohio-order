@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -21,37 +22,37 @@ public class OrderController {
     private final OrderServiceImpl orderService;
 
     @PostMapping
-    public ResponseEntity<OrderDto.OrderResponse> createOrder(@Valid @RequestBody OrderDto.OrderRequest orderRequest) {
-        OrderDto.OrderResponse response = orderService.createOrder(orderRequest);
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> createOrder(@Valid @RequestBody OrderDto.OrderRequest orderRequest) {
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.createOrder(orderRequest);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/table/{MejaId}")
-    public ResponseEntity<List<OrderDto.OrderResponse>> getOrdersByMejaId(@PathVariable String MejaId) {
-        List<OrderDto.OrderResponse> responses = orderService.getOrdersByMejaId(UUID.fromString(MejaId));
+    public ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> getOrdersByMejaId(@PathVariable String MejaId) {
+        List<CompletableFuture<OrderDto.OrderResponse>> responses = orderService.getOrdersByMejaId(UUID.fromString(MejaId));
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDto.OrderResponse> getOrderById(@PathVariable UUID orderId) {
-        OrderDto.OrderResponse response = orderService.getOrderById(orderId);
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> getOrderById(@PathVariable UUID orderId) {
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.getOrderById(orderId);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{orderId}/items")
-    public ResponseEntity<OrderDto.OrderResponse> addItemToOrder(
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> addItemToOrder(
             @PathVariable UUID orderId,
             @Valid @RequestBody OrderDto.OrderItemRequest itemRequest) {
-        OrderDto.OrderResponse response = orderService.addItemToOrder(orderId, itemRequest);
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.addItemToOrder(orderId, itemRequest);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{orderId}/items/{itemId}")
-    public ResponseEntity<OrderDto.OrderResponse> updateOrderItem(
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrderItem(
             @PathVariable UUID orderId,
             @PathVariable UUID itemId,
             @Valid @RequestBody OrderDto.UpdateOrderItemRequest updateRequest) {
-        OrderDto.OrderResponse response = orderService.updateOrderItem(orderId, itemId, updateRequest);
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.updateOrderItem(orderId, itemId, updateRequest);
         return ResponseEntity.ok(response);
     }
 
