@@ -81,6 +81,7 @@ class OrderServiceImplTest {
                 .id(orderId)
                 .meja(meja)
                 .orderItems(new ArrayList<>())
+                .locked(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build());

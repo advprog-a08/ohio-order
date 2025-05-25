@@ -66,7 +66,7 @@ public class DraftStateTest {
 
     @Test
     void next_LocksOrder_WhenTransitioningToOrdered() {
-        assertFalse(order.isLocked());
+        assertFalse(order.getLocked());
 
         doNothing().when(mockCheckoutService).validateQuantitiesBeforeNextState(checkout);
         doNothing().when(mockCheckoutService).reduceMenuItemQuantities(checkout);

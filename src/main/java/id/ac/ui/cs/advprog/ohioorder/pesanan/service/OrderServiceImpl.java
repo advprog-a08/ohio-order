@@ -134,7 +134,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.isLocked()) {
+        if (order.getLocked()) {
             throw new IllegalStateException("Cannot modify order because it has been checked out");
         }
 
@@ -164,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.isLocked()) {
+        if (order.getLocked()) {
             throw new IllegalStateException("Cannot modify order because it has been checked out");
         }
 
@@ -184,7 +184,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.isLocked()) {
+        if (order.getLocked()) {
             throw new IllegalStateException("Cannot modify order because it has been checked out");
         }
 
@@ -206,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (order.isLocked()) {
+        if (order.getLocked()) {
             throw new IllegalStateException("Cannot delete order because it has been checked out");
         }
 
