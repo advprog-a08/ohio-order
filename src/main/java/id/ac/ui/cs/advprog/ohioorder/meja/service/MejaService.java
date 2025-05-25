@@ -21,4 +21,5 @@ public interface MejaService {
     boolean isMejaAvailable(UUID id);
     List<MejaResponse> getAvailableMeja();
     CompletableFuture<TableSessionResponse> createTableSession(UUID id);
+    CompletableFuture<TableSessionResponse> deactivateTableSession(String sessionId);
 }
