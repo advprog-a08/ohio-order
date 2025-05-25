@@ -36,20 +36,20 @@ public class OrderServiceImpl implements OrderService {
     private final MenuServiceClient menuServiceClient;
 
     @Transactional
-    public CompletableFuture<OrderDto.OrderResponse> createOrder(OrderDto.OrderRequest orderRequest) {
-        var mejaResponse = mejaService.getMejaById(orderRequest.getMejaId());
-
-        if (!mejaResponse.getStatus().equals(MejaStatus.TERSEDIA)) {
-            throw new IllegalStateException("Table is not available for ordering");
-        }
-
+    public CompletableFuture<OrderDto.OrderResponse> createOrder(OrderDto.OrderRequest orderRequest, UUID tableId) {
         if (orderRequest.getItems() != null) {
             for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
                 menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
             }
         }
 
-        Order order = orderMapper.toEntity(orderRequest);
+        OrderDto.OrderRequest newOrderRequest = OrderDto.OrderRequest.builder()
+                .items(orderRequest.getItems())
+                .mejaId(tableId)
+                .locked(false)
+                .build();
+
+        Order order = orderMapper.toEntity(newOrderRequest);
         Order savedOrder = orderRepository.save(order);
 
         return enrichOrderResponseAsync(orderMapper.toDto(savedOrder));
