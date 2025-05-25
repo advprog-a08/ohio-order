@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
+import id.ac.ui.cs.advprog.ohioorder.annotation.RequireAdmin;
+import id.ac.ui.cs.advprog.ohioorder.annotation.RequireTableSession;
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
@@ -18,6 +20,8 @@ public class CheckoutController {
     }
 
     @GetMapping("{checkoutId}")
+    @RequireAdmin
+    @RequireTableSession
     public ResponseEntity<?> findById(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(ResponseEntity::ok)
@@ -25,6 +29,7 @@ public class CheckoutController {
     }
 
     @PostMapping
+    @RequireTableSession
     public ResponseEntity<Checkout> create(@RequestBody CheckoutCreateRequest request) {
         return checkoutService.create(request.getOrderId())
                 .map(ResponseEntity::ok)
@@ -32,6 +37,7 @@ public class CheckoutController {
     }
 
     @PostMapping("{checkoutId}/advance")
+    @RequireAdmin
     public ResponseEntity<?> advance(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
@@ -48,6 +54,7 @@ public class CheckoutController {
     }
 
     @DeleteMapping("{checkoutId}")
+    @RequireTableSession
     public ResponseEntity<?> cancel(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
