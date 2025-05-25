@@ -18,9 +18,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -236,5 +236,52 @@ class MejaControllerTest {
         assertEquals(response, result.getBody());
         
         verify(mejaService).createTableSession(id);
+    }
+
+    @Test
+    void testDeactivateTableSessionReturnsDeactivatedSessionResponse() {
+        String sessionId = "session-123";
+        TableSessionResponse deactivatedResponse = TableSessionResponse.builder()
+                .tableId(uuid.toString())
+                .sessionId(sessionId)
+                .isActive(false)
+                .message("Session deactivated successfully")
+                .build();
+                
+        when(mejaService.deactivateTableSession(sessionId))
+                .thenReturn(CompletableFuture.completedFuture(deactivatedResponse));
+
+        CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = 
+                mejaController.deactivateTableSession(sessionId);
+        ResponseEntity<TableSessionResponse> result = resultFuture.join();
+        
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals(deactivatedResponse, result.getBody());
+        assertFalse(result.getBody().isActive());
+        assertEquals("Session deactivated successfully", result.getBody().getMessage());
+        
+        verify(mejaService).deactivateTableSession(sessionId);
+    }
+
+    @Test
+    void testDeactivateTableSessionWithExceptionalCompletion() {
+        String sessionId = "invalid-session";
+        CompletableFuture<TableSessionResponse> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new RuntimeException("Session deactivation failed"));
+        
+        when(mejaService.deactivateTableSession(sessionId)).thenReturn(failedFuture);
+
+        CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = 
+                mejaController.deactivateTableSession(sessionId);
+        
+        CompletionException exception = assertThrows(
+                CompletionException.class,
+                () -> resultFuture.join()
+        );
+        
+        assertTrue(exception.getCause() instanceof RuntimeException);
+        assertEquals("Session deactivation failed", exception.getCause().getMessage());
+        
+        verify(mejaService).deactivateTableSession(sessionId);
     }
 }

@@ -504,4 +504,150 @@ class MejaServiceImplTest {
         verify(mejaRepository, times(2)).findById(uuid);
         verify(tableSessionGrpcClient, never()).createTableSession(anyString());
     }
+
+    @Test
+    void testDeactivateTableSessionSuccess() {
+        String sessionId = "session-123";
+        
+        Meja busyMeja = Meja.builder()
+                .id(uuid)
+                .nomorMeja("A1")
+                .status(MejaStatus.TERISI)
+                .build();
+        
+        TableSessionOuterClass.TableSession deactivatedSession = TableSessionOuterClass.TableSession.newBuilder()
+                .setId(sessionId)
+                .setTableId(uuid.toString())
+                .setIsActive(false)
+                .build();
+                
+        TableSessionOuterClass.TableSessionResponse deactivationResponse = TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(deactivatedSession)
+                .build();
+        
+        when(tableSessionGrpcClient.deactivateTableSession(sessionId)).thenReturn(deactivationResponse);
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.of(busyMeja));
+        when(mejaRepository.save(any(Meja.class))).thenReturn(busyMeja);
+        
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.deactivateTableSession(sessionId);
+        TableSessionResponse result = resultFuture.join();
+        
+        assertNotNull(result);
+        assertEquals(uuid.toString(), result.getTableId());
+        assertEquals(sessionId, result.getSessionId());
+        assertFalse(result.isActive());
+        assertEquals("Session deactivated successfully", result.getMessage());
+
+        assertEquals(MejaStatus.TERSEDIA, busyMeja.getStatus());
+        
+        verify(tableSessionGrpcClient).deactivateTableSession(sessionId);
+        verify(mejaRepository).findById(uuid);
+        verify(mejaRepository).save(busyMeja);
+    }
+
+    @Test
+    void testDeactivateTableSessionWithInvalidTableId() {
+        String sessionId = "session-123";
+        String invalidTableId = "invalid-uuid";
+        
+        TableSessionOuterClass.TableSession deactivatedSession = TableSessionOuterClass.TableSession.newBuilder()
+                .setId(sessionId)
+                .setTableId(invalidTableId)
+                .setIsActive(false)
+                .build();
+                
+        TableSessionOuterClass.TableSessionResponse deactivationResponse = TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(deactivatedSession)
+                .build();
+        
+        when(tableSessionGrpcClient.deactivateTableSession(sessionId)).thenReturn(deactivationResponse);
+
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.deactivateTableSession(sessionId);
+        TableSessionResponse result = resultFuture.join();
+        
+        assertNotNull(result);
+        assertEquals(invalidTableId, result.getTableId());
+        assertEquals(sessionId, result.getSessionId());
+        assertFalse(result.isActive());
+        
+        verify(mejaRepository, never()).findById(any(UUID.class));
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
+
+    @Test
+    void testDeactivateTableSessionWithEmptyGrpcResponse() {
+        String sessionId = "session-123";
+
+        TableSessionOuterClass.TableSessionResponse emptyResponse = 
+                TableSessionOuterClass.TableSessionResponse.newBuilder().build();
+        
+        when(tableSessionGrpcClient.deactivateTableSession(sessionId)).thenReturn(emptyResponse);
+        
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.deactivateTableSession(sessionId);
+        TableSessionResponse result = resultFuture.join();
+        
+        assertNotNull(result);
+        assertEquals("", result.getTableId());
+        assertEquals("", result.getSessionId());
+        assertFalse(result.isActive());
+        assertEquals("Session deactivated successfully", result.getMessage());
+        
+        verify(mejaRepository, never()).findById(any(UUID.class));
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
+    
+    @Test
+    void testDeactivateTableSessionWhenMejaNotFound() {
+        String sessionId = "session-123";
+        
+        TableSessionOuterClass.TableSession deactivatedSession = TableSessionOuterClass.TableSession.newBuilder()
+                .setId(sessionId)
+                .setTableId(uuid.toString())
+                .setIsActive(false)
+                .build();
+                
+        TableSessionOuterClass.TableSessionResponse deactivationResponse = 
+                TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(deactivatedSession)
+                .build();
+        
+        when(tableSessionGrpcClient.deactivateTableSession(sessionId)).thenReturn(deactivationResponse);
+        when(mejaRepository.findById(uuid)).thenReturn(Optional.empty());
+        
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.deactivateTableSession(sessionId);
+        
+        CompletionException exception = assertThrows(
+                CompletionException.class,
+                () -> resultFuture.join()
+        );
+        
+        assertTrue(exception.getCause() instanceof MejaNotFoundException);
+        assertTrue(exception.getCause().getMessage().contains("tidak ditemukan"));
+        
+        verify(tableSessionGrpcClient).deactivateTableSession(sessionId);
+        verify(mejaRepository).findById(uuid);
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
+    
+    @Test
+    void testDeactivateTableSessionWithGrpcException() {
+        String sessionId = "session-123";
+        
+        when(tableSessionGrpcClient.deactivateTableSession(sessionId)).thenThrow(
+                new RuntimeException("gRPC service unavailable"));
+        
+        CompletableFuture<TableSessionResponse> resultFuture = mejaService.deactivateTableSession(sessionId);
+        
+        CompletionException exception = assertThrows(
+                CompletionException.class,
+                () -> resultFuture.join()
+        );
+        
+        assertTrue(exception.getCause() instanceof RuntimeException);
+        assertEquals("gRPC service unavailable", exception.getCause().getMessage());
+        
+        verify(tableSessionGrpcClient).deactivateTableSession(sessionId);
+        verify(mejaRepository, never()).findById(any(UUID.class));
+        verify(mejaRepository, never()).save(any(Meja.class));
+    }
 }
