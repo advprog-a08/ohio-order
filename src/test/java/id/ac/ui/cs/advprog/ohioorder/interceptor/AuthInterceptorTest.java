@@ -175,7 +175,7 @@ class AuthInterceptorTest {
         // Given
         String validToken = "invalid-token";
         String authHeader = "Bearer " + validToken;
-        String errorMessage = "Invalid token";
+        String errorMessage = "Unauthorized: valid admin or table session required";
 
         when(handlerMethod.hasMethodAnnotation(RequireAdmin.class)).thenReturn(true);
         when(handlerMethod.hasMethodAnnotation(RequireTableSession.class)).thenReturn(false);
@@ -235,7 +235,7 @@ class AuthInterceptorTest {
 
         // Then
         assertFalse(result);
-        verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Missing session ID");
+        verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized: valid admin or table session required");
         verifyNoInteractions(tableSessionGrpcClient);
     }
 
@@ -251,7 +251,7 @@ class AuthInterceptorTest {
 
         // Then
         assertFalse(result);
-        verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Missing session ID");
+        verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized: valid admin or table session required");
         verifyNoInteractions(tableSessionGrpcClient);
     }
 
@@ -259,7 +259,7 @@ class AuthInterceptorTest {
     void preHandle_RequireTableSession_GrpcException_ShouldReturnFalse() throws Exception {
         // Given
         String sessionId = "invalid-session-id";
-        String errorMessage = "Invalid session";
+        String errorMessage = "Unauthorized: valid admin or table session required";
 
         when(handlerMethod.hasMethodAnnotation(RequireAdmin.class)).thenReturn(false);
         when(handlerMethod.hasMethodAnnotation(RequireTableSession.class)).thenReturn(true);
@@ -321,6 +321,105 @@ class AuthInterceptorTest {
         verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Missing or invalid Authorization header");
         // Should not check table session since admin auth failed
         verifyNoInteractions(tableSessionGrpcClient);
+    }
+
+    @Test
+    void preHandle_BothAnnotations_InvalidAdmin_ValidTableSession_ShouldAuthenticateAsTableSession() throws Exception {
+        // Given
+        String token = "invalid-token";
+        String sessionId = "valid-session-id";
+
+        when(handlerMethod.hasMethodAnnotation(RequireAdmin.class)).thenReturn(true);
+        when(handlerMethod.hasMethodAnnotation(RequireTableSession.class)).thenReturn(true);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(request.getHeader("X-Session-Id")).thenReturn(sessionId);
+
+        // Simulate admin failure
+        when(adminGrpcClient.verifyAdmin(token)).thenThrow(new RuntimeException("Invalid token"));
+
+        // Simulate table session success
+        TableSessionOuterClass.TableSession tableSessionData = TableSessionOuterClass.TableSession.newBuilder()
+                .setId("1")
+                .setTableId("A1")
+                .setIsActive(true)
+                .build();
+        TableSessionOuterClass.TableSessionResponse sessionResponse = TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(tableSessionData)
+                .build();
+        when(tableSessionGrpcClient.verifyTableSession(sessionId)).thenReturn(sessionResponse);
+
+        // When
+        boolean result = authInterceptor.preHandle(request, response, handlerMethod);
+
+        // Then
+        assertTrue(result);
+        verify(adminGrpcClient).verifyAdmin(token);
+        verify(tableSessionGrpcClient).verifyTableSession(sessionId);
+        verify(request).setAttribute(eq("authenticatedTableSession"), any(TableSession.class));
+    }
+
+    @Test
+    void preHandle_BothAnnotations_InvalidAdminAndTableSession_ShouldReturnFalse() throws Exception {
+        // Given
+        String token = "invalid-token";
+        String sessionId = "invalid-session";
+
+        when(handlerMethod.hasMethodAnnotation(RequireAdmin.class)).thenReturn(true);
+        when(handlerMethod.hasMethodAnnotation(RequireTableSession.class)).thenReturn(true);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(request.getHeader("X-Session-Id")).thenReturn(sessionId);
+
+        when(adminGrpcClient.verifyAdmin(token)).thenThrow(new RuntimeException("Bad token"));
+        when(tableSessionGrpcClient.verifyTableSession(sessionId)).thenThrow(new RuntimeException("Bad session"));
+
+        // When
+        boolean result = authInterceptor.preHandle(request, response, handlerMethod);
+
+        // Then
+        assertFalse(result);
+        verify(adminGrpcClient).verifyAdmin(token);
+        verify(tableSessionGrpcClient).verifyTableSession(sessionId);
+        verify(response).sendError(HttpStatus.UNAUTHORIZED.value(), "Unauthorized: valid admin or table session required");
+    }
+
+    @Test
+    void preHandle_BothAnnotations_ValidAdminAndTableSession_ShouldHaveBoth() throws Exception {
+        // Given
+        String token = "valid-token";
+        String sessionId = "valid-session";
+
+        when(handlerMethod.hasMethodAnnotation(RequireAdmin.class)).thenReturn(true);
+        when(handlerMethod.hasMethodAnnotation(RequireTableSession.class)).thenReturn(true);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(request.getHeader("X-Session-Id")).thenReturn(sessionId);
+
+        AdminOuterClass.Admin mockAdmin = AdminOuterClass.Admin.newBuilder()
+                .setEmail("admin@example.com")
+                .build();
+        AdminOuterClass.AdminResponse adminResponse = AdminOuterClass.AdminResponse.newBuilder()
+                .setAdmin(mockAdmin)
+                .build();
+        when(adminGrpcClient.verifyAdmin(token)).thenReturn(adminResponse);
+
+        // table session is valid but shouldn't matter
+        TableSessionOuterClass.TableSession tableSessionData = TableSessionOuterClass.TableSession.newBuilder()
+                .setId("1")
+                .setTableId("A1")
+                .setIsActive(true)
+                .build();
+        TableSessionOuterClass.TableSessionResponse sessionResponse = TableSessionOuterClass.TableSessionResponse.newBuilder()
+                .setTableSession(tableSessionData)
+                .build();
+        when(tableSessionGrpcClient.verifyTableSession(sessionId)).thenReturn(sessionResponse);
+
+        // When
+        boolean result = authInterceptor.preHandle(request, response, handlerMethod);
+
+        // Then
+        assertTrue(result);
+        verify(adminGrpcClient).verifyAdmin(token);
+        verify(request).setAttribute(eq("authenticatedAdmin"), any(Admin.class));
+        verify(request).setAttribute(eq("authenticatedTableSession"), any(TableSession.class));
     }
 
     // Test helper class for testing with actual annotations
