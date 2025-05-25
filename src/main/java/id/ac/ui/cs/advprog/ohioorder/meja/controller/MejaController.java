@@ -79,4 +79,10 @@ public class MejaController {
         return mejaService.createTableSession(id)
                 .thenApply(ResponseEntity::ok);
     }
+
+    @PostMapping("/session/{sessionId}/deactivate")
+    public CompletableFuture<ResponseEntity<TableSessionResponse>> deactivateTableSession(@PathVariable String sessionId) {
+        return mejaService.deactivateTableSession(sessionId)
+                .thenApply(ResponseEntity::ok);
+    }
 }
