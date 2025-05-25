@@ -12,7 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DraftState implements CheckoutState {
+public class DraftState extends CheckoutState {
     private static final DraftState INSTANCE = new DraftState();
     private static ApplicationContext context;
     private DraftState() {}
@@ -27,7 +27,7 @@ public class DraftState implements CheckoutState {
     }
 
     @Override
-    public void next(Checkout checkout) throws InvalidStateTransitionException {
+    public void advance(Checkout checkout) throws InvalidStateTransitionException {
         if (context != null) {
             CheckoutService checkoutService = context.getBean(CheckoutService.class);
             CheckoutServiceImpl checkoutServiceImpl = (CheckoutServiceImpl) checkoutService;
@@ -57,7 +57,7 @@ public class DraftState implements CheckoutState {
     }
 
     @Override
-    public void update() throws InvalidStateTransitionException {
-        // not throw3
+    public String message() {
+        return "Hang tight! We’re confirming your order with the kitchen — we’ll update you shortly.";
     }
 }

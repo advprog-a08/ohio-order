@@ -16,21 +16,15 @@ public class CompletedStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.COMPLETED);
-        checkout.initializeState();
     }
 
     @Test
-    void testNextTransitionNoChange() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.nextState());
+    void testAdvanceTransitionNoChange() {
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.advance());
     }
 
     @Test
     void testCancelTransitionNoChange() {
         assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
-    }
-
-    @Test
-    void testUpdateRejected() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.update());
     }
 }

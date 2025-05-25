@@ -57,13 +57,6 @@ public class CheckoutServiceImpl implements CheckoutService {
         return checkoutRepository.findById(UUID.fromString(id));
     }
 
-    @Override
-    public void updateById(String id) {
-        findById(id).ifPresent(checkout -> {
-            checkout.update();
-        });
-    }
-
     public void validateQuantitiesBeforeNextState(Checkout checkout) throws InsufficientQuantityException {
         Order order = checkout.getOrder();
         List<String> validationErrors = quantityValidator.validateOrderItemsQuantity(order);

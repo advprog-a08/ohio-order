@@ -16,12 +16,11 @@ public class OrderedStateTest {
     void setUp() {
         checkout = new Checkout();
         checkout.setState(CheckoutStateType.ORDERED);
-        checkout.initializeState();
     }
 
     @Test
-    void testNextTransitionToCompleted() {
-        checkout.nextState();
+    void testAdvanceTransitionToCompleted() {
+        checkout.advance();
         assertEquals(CheckoutStateType.PREPARING, checkout.getState());
         assertEquals(checkout.getCheckoutState(), PreparingState.getInstance());
     }
@@ -29,10 +28,5 @@ public class OrderedStateTest {
     @Test
     void testCancelTransitionToCancelled() {
         assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
-    }
-
-    @Test
-    void testUpdateRejected() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.update());
     }
 }

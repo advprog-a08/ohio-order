@@ -132,18 +132,7 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    void testUpdateById() {
-        Checkout spyCheckout = spy(checkout);
-        when(checkoutRepository.findById(checkoutId)).thenReturn(Optional.of(spyCheckout));
-
-        checkoutService.updateById(checkoutId.toString());
-
-        verify(spyCheckout).update();
-        verify(checkoutRepository).findById(checkoutId);
-    }
-
-    @Test
-    void validateQuantitiesBeforeNextState_Success() {
+    void validateQuantitiesBeforeAdvance_Success() {
         when(quantityValidator.validateOrderItemsQuantity(order)).thenReturn(List.of());
 
         assertDoesNotThrow(() -> checkoutService.validateQuantitiesBeforeNextState(checkout));
@@ -152,7 +141,7 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    void validateQuantitiesBeforeNextState_ThrowsException_WhenInsufficientQuantity() {
+    void validateQuantitiesBeforeAdvance_ThrowsException_WhenInsufficientQuantity() {
         when(quantityValidator.validateOrderItemsQuantity(order))
                 .thenReturn(List.of("Insufficient quantity for menu item 'Pizza'"));
 

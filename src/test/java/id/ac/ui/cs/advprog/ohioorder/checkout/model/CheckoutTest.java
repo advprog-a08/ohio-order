@@ -58,7 +58,6 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forDraft() {
         checkout.setState(CheckoutStateType.DRAFT);
-        checkout.initializeState();
 
         assertInstanceOf(DraftState.class, checkout.getCheckoutState());
     }
@@ -66,7 +65,6 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forCompleted() {
         checkout.setState(CheckoutStateType.COMPLETED);
-        checkout.initializeState();
 
         assertInstanceOf(CompletedState.class, checkout.getCheckoutState());
     }
@@ -74,9 +72,50 @@ public class CheckoutTest {
     @Test
     void testInitializeState_setsCorrectStateInstance_forCancelled() {
         checkout.setState(CheckoutStateType.CANCELLED);
-        checkout.initializeState();
 
         assertInstanceOf(CancelledState.class, checkout.getCheckoutState());
+    }
+
+    @Test
+    void testMessage_draftState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.DRAFT);
+
+        assertEquals(checkout.message(), CheckoutStateType.DRAFT.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_orderedState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.ORDERED);
+
+        assertEquals(checkout.message(), CheckoutStateType.ORDERED.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_preparingState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.PREPARING);
+
+        assertEquals(checkout.message(), CheckoutStateType.PREPARING.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_completedState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.COMPLETED);
+
+        assertEquals(checkout.message(), CheckoutStateType.COMPLETED.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_readyState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.READY);
+
+        assertEquals(checkout.message(), CheckoutStateType.READY.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_cancelledState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.CANCELLED);
+
+        assertEquals(checkout.message(), CheckoutStateType.CANCELLED.getCheckoutState().message());
     }
 
     @Test
