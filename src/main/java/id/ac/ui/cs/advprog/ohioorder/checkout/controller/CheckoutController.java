@@ -24,14 +24,14 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping("create")
+    @PostMapping
     public ResponseEntity<Checkout> create(@RequestBody CheckoutCreateRequest request) {
         return checkoutService.create(request.getOrderId())
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.badRequest().build());
     }
 
-    @PostMapping("advance/{checkoutId}")
+    @PostMapping("{checkoutId}/advance")
     public ResponseEntity<?> advance(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {
@@ -47,7 +47,7 @@ public class CheckoutController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("cancel/{checkoutId}")
+    @DeleteMapping("{checkoutId}")
     public ResponseEntity<?> cancel(@PathVariable String checkoutId) {
         return checkoutService.findById(checkoutId)
                 .map(checkout -> {

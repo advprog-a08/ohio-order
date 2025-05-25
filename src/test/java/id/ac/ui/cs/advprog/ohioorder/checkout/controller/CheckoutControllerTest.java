@@ -117,7 +117,7 @@ class CheckoutControllerTest {
                 .orderId(validOrderId)
                 .build());
 
-        mockMvc.perform(post("/api/checkout/create")
+        mockMvc.perform(post("/api/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
@@ -129,7 +129,7 @@ class CheckoutControllerTest {
         String orderId = UUID.randomUUID().toString();
         doReturn(Optional.empty()).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
                 .andExpect(status().isNotFound());
     }
 
@@ -140,7 +140,7 @@ class CheckoutControllerTest {
         mockCheckout.setState(CheckoutStateType.DRAFT);
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value(CheckoutStateType.CANCELLED.toString()));
     }
@@ -152,7 +152,7 @@ class CheckoutControllerTest {
         mockCheckout.setState(CheckoutStateType.CANCELLED);  // Already cancelled
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(delete("/api/checkout/cancel/{checkoutId}", orderId))
+        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
                 .andExpect(status().isBadRequest());
     }
 
@@ -170,7 +170,7 @@ class CheckoutControllerTest {
 
         doReturn(Optional.of(spyCheckout)).when(checkoutService).findById(checkoutId);
 
-        mockMvc.perform(post("/api/checkout/advance/{checkoutId}", checkoutId))
+        mockMvc.perform(post("/api/checkout/{checkoutId}/advance", checkoutId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()));
     }
@@ -182,7 +182,7 @@ class CheckoutControllerTest {
         mockCheckout.setState(CheckoutStateType.CANCELLED);  // Cancelled cannot be advanced
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(post("/api/checkout/advance/{checkoutId}", orderId))
+        mockMvc.perform(post("/api/checkout/{checkoutId}/advance", orderId))
                 .andExpect(status().isBadRequest());
     }
 }
