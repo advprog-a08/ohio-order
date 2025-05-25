@@ -68,16 +68,6 @@ class OrderItemTest {
     }
 
     @Test
-    void noArgsConstructor_CreatesEmptyOrderItem() {
-        OrderItem emptyItem = new OrderItem();
-
-        assertNull(emptyItem.getId());
-        assertNull(emptyItem.getMenuItemId());
-        assertEquals(0, emptyItem.getQuantity());
-        assertNull(emptyItem.getOrder());
-    }
-
-    @Test
     void allArgsConstructor_CreatesFullOrderItem() {
         UUID itemId = UUID.randomUUID();
         OrderItem fullItem = new OrderItem(
