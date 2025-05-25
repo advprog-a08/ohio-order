@@ -34,7 +34,7 @@ public class Order {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Column(name = "locked", nullable = false)
-    private boolean locked = false;
+    private Boolean locked = false;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
