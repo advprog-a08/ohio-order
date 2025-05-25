@@ -44,10 +44,6 @@ public class Checkout {
         state.getCheckoutState().next(this);
     }
 
-    public void update() {
-        state.getCheckoutState().update();
-    }
-
     public void cancel() throws InvalidStateTransitionException {
         state.getCheckoutState().cancel(this);
     }

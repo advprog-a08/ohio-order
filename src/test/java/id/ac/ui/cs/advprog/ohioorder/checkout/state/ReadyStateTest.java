@@ -29,9 +29,4 @@ public class ReadyStateTest {
     void testCancelTransitionToCancelled() {
         assertThrows(InvalidStateTransitionException.class, () -> checkout.cancel());
     }
-
-    @Test
-    void testUpdateRejected() {
-        assertThrows(InvalidStateTransitionException.class, () -> checkout.update());
-    }
 }

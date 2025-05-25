@@ -20,9 +20,4 @@ public class CompletedState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in completed state");
     }
-
-    @Override
-    public void update() throws InvalidStateTransitionException {
-        throw new InvalidStateTransitionException("Cannot update order in cancelled state");
-    }
 }

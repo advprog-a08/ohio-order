@@ -21,9 +21,4 @@ public class OrderedState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in ordered state");
     }
-
-    @Override
-    public void update() throws InvalidStateTransitionException {
-        throw new InvalidStateTransitionException("Cannot update order in cancelled state");
-    }
 }

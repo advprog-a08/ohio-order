@@ -29,9 +29,4 @@ public class DraftStateTest {
         checkout.cancel();
         assertEquals(CheckoutStateType.CANCELLED, checkout.getState());
     }
-
-    @Test
-    void testUpdateAccepted() {
-        assertDoesNotThrow(() -> checkout.update());
-    }
 }
