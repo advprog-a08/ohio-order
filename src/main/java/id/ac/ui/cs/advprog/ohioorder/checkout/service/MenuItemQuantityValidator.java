@@ -33,7 +33,10 @@ public class MenuItemQuantityValidator {
 
         try {
             CompletableFuture.allOf(validationFutures.toArray(new CompletableFuture[0])).get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            validationErrors.add("Error validating menu items: " + e.getMessage());
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
             validationErrors.add("Error validating menu items: " + e.getMessage());
         }
 

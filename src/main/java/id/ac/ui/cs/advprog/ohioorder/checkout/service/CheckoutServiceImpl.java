@@ -96,7 +96,10 @@ public class CheckoutServiceImpl implements CheckoutService {
             if (!failedItems.isEmpty()) {
                 throw new RuntimeException("Failed to reduce quantities for menu items: " + String.join(", ", failedItems));
             }
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread was interrupted while reducing menu item quantities", e);
+        } catch (ExecutionException e) {
             throw new RuntimeException("Error reducing menu item quantities: " + e.getMessage(), e);
         }
     }
