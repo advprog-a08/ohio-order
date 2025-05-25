@@ -163,35 +163,15 @@ class CheckoutControllerTest {
     void next_shouldReturn200_whenNextIsSuccessful() throws Exception {
         String checkoutId = UUID.randomUUID().toString();
 
-        Order order = new Order();
-        order.setId(UUID.randomUUID());
-        order.setOrderItems(new ArrayList<>());
-
-        OrderItem item1 = OrderItem.builder()
-                .id(UUID.randomUUID())
-                .menuItemId("menu-1")
-                .quantity(2)
-                .build();
-
-        OrderItem item2 = OrderItem.builder()
-                .id(UUID.randomUUID())
-                .menuItemId("menu-2")
-                .quantity(1)
-                .build();
-
-        order.addOrderItem(item1);
-        order.addOrderItem(item2);
-
-        mockCheckout.setState(CheckoutStateType.DRAFT);
-        mockCheckout.setOrder(order);
-
-        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(checkoutId);
+        Checkout spyCheckout = spy(new Checkout());
+        spyCheckout.setState(CheckoutStateType.DRAFT);
 
         doAnswer(invocation -> {
-            Checkout checkout = invocation.getArgument(0);
-            checkout.setState(CheckoutStateType.ORDERED);
-            return checkout;
-        }).when(checkoutService).save(any(Checkout.class));
+            spyCheckout.setState(CheckoutStateType.ORDERED);
+            return null;
+        }).when(spyCheckout).nextState();
+
+        doReturn(Optional.of(spyCheckout)).when(checkoutService).findById(checkoutId);
 
         mockMvc.perform(post("/api/checkout/next/{checkoutId}", checkoutId))
                 .andExpect(status().isOk())
