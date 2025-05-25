@@ -156,4 +156,39 @@ public class MejaServiceImpl implements MejaService {
             return failedFuture;
         }
     }
+
+    @Async
+    @Override
+    public CompletableFuture<TableSessionResponse> deactivateTableSession(String sessionId) {
+        try {
+            TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.deactivateTableSession(sessionId);
+            
+            if (grpcResponse.hasTableSession()) {
+                String tableId = grpcResponse.getTableSession().getTableId();
+                try {
+                    UUID id = UUID.fromString(tableId);
+                    Meja meja = mejaRepository.findById(id)
+                            .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
+                    
+                    meja.setStatus(MejaStatus.TERSEDIA);
+                    mejaRepository.save(meja);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Invalid table UUID: " + tableId);
+                }
+            }
+            
+            TableSessionResponse response = TableSessionResponse.builder()
+                    .tableId(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getTableId() : "")
+                    .sessionId(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getId() : "")
+                    .isActive(grpcResponse.hasTableSession() ? grpcResponse.getTableSession().getIsActive() : false)
+                    .message("Session deactivated successfully")
+                    .build();
+                    
+            return CompletableFuture.completedFuture(response);
+        } catch (Exception e) {
+            CompletableFuture<TableSessionResponse> failedFuture = new CompletableFuture<>();
+            failedFuture.completeExceptionally(e);
+            return failedFuture;
+        }
+    }
 }
