@@ -20,10 +20,9 @@ public class OrderDto {
     @AllArgsConstructor
     @Builder
     public static class OrderRequest {
-        @NotNull(message = "Meja ID is required")
         private UUID mejaId;
-
         private List<OrderItemRequest> items;
+        private Boolean locked;
     }
 
     @Data

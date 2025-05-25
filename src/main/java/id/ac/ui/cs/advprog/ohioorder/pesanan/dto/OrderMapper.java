@@ -29,6 +29,7 @@ public class OrderMapper {
 
         Order order = Order.builder()
                 .meja(meja)
+                .locked(orderRequest.getLocked())
                 .build();
 
         if (order.getOrderItems() == null) {
