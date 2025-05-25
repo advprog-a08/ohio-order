@@ -146,7 +146,7 @@ class OrderServiceImplTest {
         assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
 
-        verify(menuServiceClient).getMenuItem("menu-1");
+        verify(menuServiceClient, times(2)).getMenuItem("menu-1");
         verify(orderRepository).save(order);
     }
 
@@ -499,5 +499,29 @@ class OrderServiceImplTest {
         assertEquals("Cannot delete order because it has been checked out", exception.getMessage());
 
         verify(orderRepository, never()).delete(any());
+    }
+
+    @Test
+    void createOrder_ThrowsException_WhenDuplicateMenuItemsExist() {
+        OrderDto.OrderRequest requestWithDuplicates = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(2)
+                                .build(),
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1") // Same menuItemId
+                                .quantity(1)
+                                .build()
+                ))
+                .build();
+
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.createOrder(requestWithDuplicates, mejaId));
+
+        assertTrue(exception.getMessage().contains("Duplicate menu items found: menu-1"));
+        verify(orderRepository, never()).save(any());
     }
 }

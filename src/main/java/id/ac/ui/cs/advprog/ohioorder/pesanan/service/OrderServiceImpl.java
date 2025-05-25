@@ -17,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -40,6 +37,24 @@ public class OrderServiceImpl implements OrderService {
         if (orderRequest.getItems() != null) {
             for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
                 menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+            }
+        }
+
+        if (orderRequest.getItems() != null && !orderRequest.getItems().isEmpty()) {
+            Set<String> uniqueMenuItems = new HashSet<>();
+            List<String> duplicateItems = new ArrayList<>();
+
+            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
+                String menuItemId = itemRequest.getMenuItemId();
+                if (!uniqueMenuItems.add(menuItemId)) {
+                    duplicateItems.add(menuItemId);
+                }
+
+                menuServiceClient.getMenuItem(menuItemId);
+            }
+
+            if (!duplicateItems.isEmpty()) {
+                throw new IllegalArgumentException("Duplicate menu items found: " + String.join(", ", duplicateItems));
             }
         }
 
