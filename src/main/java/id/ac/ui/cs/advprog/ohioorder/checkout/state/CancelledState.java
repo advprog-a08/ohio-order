@@ -20,4 +20,9 @@ public class CancelledState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in cancelled state");
     }
+
+    @Override
+    public String message() {
+        return "Your order has been canceled. No worries — we hope to serve you next time!";
+    }
 }

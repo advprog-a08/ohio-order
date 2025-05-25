@@ -55,4 +55,9 @@ public class DraftState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         checkout.setState(CheckoutStateType.CANCELLED);
     }
+
+    @Override
+    public String message() {
+        return "Hang tight! We’re confirming your order with the kitchen — we’ll update you shortly.";
+    }
 }

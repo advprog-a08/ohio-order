@@ -172,7 +172,8 @@ class CheckoutControllerTest {
 
         mockMvc.perform(post("/api/checkout/{checkoutId}/advance", checkoutId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()));
+                .andExpect(jsonPath("$.state").value(CheckoutStateType.ORDERED.toString()))
+                .andExpect(jsonPath("$.message").value(CheckoutStateType.ORDERED.getCheckoutState().message()));
     }
 
     @Test

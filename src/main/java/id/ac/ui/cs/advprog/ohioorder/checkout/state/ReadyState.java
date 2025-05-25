@@ -21,4 +21,9 @@ public class ReadyState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in ready state");
     }
+
+    @Override
+    public String message() {
+        return "Your order is ready! Please head to the counter to pick it up.";
+    }
 }

@@ -21,4 +21,9 @@ public class OrderedState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in ordered state");
     }
+
+    @Override
+    public String message() {
+        return "Your order has been placed! The kitchen is getting started.";
+    }
 }

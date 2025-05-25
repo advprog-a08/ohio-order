@@ -6,4 +6,5 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 public interface CheckoutState {
     void advance(Checkout checkout) throws InvalidStateTransitionException;
     void cancel(Checkout checkout) throws InvalidStateTransitionException;
+    String message();
 }

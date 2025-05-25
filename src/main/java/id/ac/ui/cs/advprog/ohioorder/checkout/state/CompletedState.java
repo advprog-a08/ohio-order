@@ -20,4 +20,9 @@ public class CompletedState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in completed state");
     }
+
+    @Override
+    public String message() {
+        return "Enjoy your meal! Let us know if you need anything else.";
+    }
 }

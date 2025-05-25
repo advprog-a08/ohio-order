@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.model;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.state.CheckoutState;
@@ -29,6 +30,11 @@ public class Checkout {
     @JoinColumn(name = "order_id", nullable = false)
     @JsonIgnore
     private Order order;
+
+    @JsonProperty("message")
+    public String message() {
+        return state.getCheckoutState().message();
+    }
 
     public Checkout() {
         this.state = CheckoutStateType.DRAFT;

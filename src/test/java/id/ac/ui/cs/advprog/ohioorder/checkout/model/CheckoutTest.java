@@ -77,6 +77,48 @@ public class CheckoutTest {
     }
 
     @Test
+    void testMessage_draftState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.DRAFT);
+
+        assertEquals(checkout.message(), CheckoutStateType.DRAFT.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_orderedState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.ORDERED);
+
+        assertEquals(checkout.message(), CheckoutStateType.ORDERED.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_preparingState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.PREPARING);
+
+        assertEquals(checkout.message(), CheckoutStateType.PREPARING.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_completedState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.COMPLETED);
+
+        assertEquals(checkout.message(), CheckoutStateType.COMPLETED.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_readyState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.READY);
+
+        assertEquals(checkout.message(), CheckoutStateType.READY.getCheckoutState().message());
+    }
+
+    @Test
+    void testMessage_cancelledState_getsCorrectMessage() {
+        checkout.setState(CheckoutStateType.CANCELLED);
+
+        assertEquals(checkout.message(), CheckoutStateType.CANCELLED.getCheckoutState().message());
+    }
+
+    @Test
     void testSetOrder_setsOrderCorrectly() {
         Order order = new Order();
         checkout.setOrder(order);

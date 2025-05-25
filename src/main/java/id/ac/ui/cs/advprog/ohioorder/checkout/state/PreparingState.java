@@ -21,4 +21,9 @@ public class PreparingState implements CheckoutState {
     public void cancel(Checkout checkout) throws InvalidStateTransitionException {
         throw new InvalidStateTransitionException("Cannot cancel order in preparing state");
     }
+
+    @Override
+    public String message() {
+        return "Your food is being prepared — we’ll let you know when it’s ready!";
+    }
 }
