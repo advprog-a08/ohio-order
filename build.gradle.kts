@@ -40,6 +40,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.postgresql:postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // gRPC dependencies
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter:0.4.0")

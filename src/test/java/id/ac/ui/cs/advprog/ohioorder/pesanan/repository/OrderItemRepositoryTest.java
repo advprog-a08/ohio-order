@@ -45,6 +45,7 @@ class OrderItemRepositoryTest {
 
         order = Order.builder()
                 .meja(meja)
+                .locked(false)
                 .build();
 
         entityManager.persist(order);

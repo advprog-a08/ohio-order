@@ -33,6 +33,9 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @Column(name = "locked", nullable = false)
+    private Boolean locked = false;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

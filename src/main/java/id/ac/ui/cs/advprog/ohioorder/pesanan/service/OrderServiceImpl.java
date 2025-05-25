@@ -18,8 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,7 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final MenuServiceClient menuServiceClient;
 
     @Transactional
-    public OrderDto.OrderResponse createOrder(OrderDto.OrderRequest orderRequest) {
+    public CompletableFuture<OrderDto.OrderResponse> createOrder(OrderDto.OrderRequest orderRequest) {
         var mejaResponse = mejaService.getMejaById(orderRequest.getMejaId());
 
         if (!mejaResponse.getStatus().equals(MejaStatus.TERSEDIA)) {
@@ -43,81 +45,100 @@ public class OrderServiceImpl implements OrderService {
 
         if (orderRequest.getItems() != null) {
             for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
-                if (!menuServiceClient.verifyMenuItemExists(itemRequest.getMenuItemId())) {
-                    throw new NoSuchElementException("Menu item not found with ID: " + itemRequest.getMenuItemId());
-                }
+                menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
             }
         }
 
         Order order = orderMapper.toEntity(orderRequest);
         Order savedOrder = orderRepository.save(order);
 
-        return enrichOrderResponse(orderMapper.toDto(savedOrder));
+        return enrichOrderResponseAsync(orderMapper.toDto(savedOrder));
     }
 
-    OrderDto.OrderResponse enrichOrderResponse(OrderDto.OrderResponse orderResponse) {
-        if (orderResponse.getItems() != null) {
-            double total = 0.0;
+    public CompletableFuture<OrderDto.OrderResponse> enrichOrderResponseAsync(OrderDto.OrderResponse orderResponse) {
+        if (orderResponse.getItems() == null || orderResponse.getItems().isEmpty()) {
+            return CompletableFuture.completedFuture(orderResponse);
+        }
 
-            for (OrderDto.OrderItemResponse itemResponse : orderResponse.getItems()) {
-                try {
-                    MenuServiceResponse menuItem = menuServiceClient.getMenuItem(itemResponse.getMenuItemId());
-                    itemResponse.setMenuItemName(menuItem.getData().getName());
-                    itemResponse.setMenuItemDescription(menuItem.getData().getDescription());
+        List<String> menuItemIds = orderResponse.getItems().stream()
+                .map(OrderDto.OrderItemResponse::getMenuItemId)
+                .collect(Collectors.toList());
 
-                    itemResponse.setPrice(menuItem.getData().getPrice());
+        return menuServiceClient.getMultipleMenuItemsAsync(menuItemIds)
+                .thenApply(menuResponses -> {
+                    Map<String, MenuServiceResponse> menuItemMap = menuResponses.stream()
+                            .collect(Collectors.toMap(
+                                    response -> response.getData().getId(),
+                                    response -> response,
+                                    (r1, r2) -> r1
+                            ));
 
-                    double subtotal = menuItem.getData().getPrice() * itemResponse.getQuantity();
-                    itemResponse.setSubtotal(subtotal);
+                    double total = 0.0;
 
-                    total += subtotal;
-                } catch (Exception e) {
-                    log.warn("Menu item {} not found (possibly deleted). Using fallback values.",
-                            itemResponse.getMenuItemId());
+                    for (OrderDto.OrderItemResponse itemResponse : orderResponse.getItems()) {
+                        try {
+                            MenuServiceResponse menuResponse = menuItemMap.get(itemResponse.getMenuItemId());
+                            if (menuResponse != null) {
+                                itemResponse.setMenuItemName(menuResponse.getData().getName());
+                                itemResponse.setMenuItemDescription(menuResponse.getData().getDescription());
+                                itemResponse.setPrice(menuResponse.getData().getPrice());
 
-                    itemResponse.setMenuItemName("[Unavailable Item]");
-                    itemResponse.setMenuItemDescription("This menu item is Unavailable.");
-                    itemResponse.setMenuItemCategory("Unavailable");
-
-                    if (itemResponse.getPrice() == null) {
-                        itemResponse.setPrice(0.0);
+                                double subtotal = menuResponse.getData().getPrice() * itemResponse.getQuantity();
+                                itemResponse.setSubtotal(subtotal);
+                                total += subtotal;
+                            } else {
+                                handleUnavailableItem(itemResponse);
+                                total += itemResponse.getSubtotal();
+                            }
+                        } catch (Exception e) {
+                            log.warn("Menu item {} not found. Using fallback values.", itemResponse.getMenuItemId());
+                            handleUnavailableItem(itemResponse);
+                            total += itemResponse.getSubtotal();
+                        }
                     }
 
-                    double subtotal = itemResponse.getPrice() * itemResponse.getQuantity();
-                    itemResponse.setSubtotal(subtotal);
-                    total += subtotal;
-
-                }
-            }
-
-            orderResponse.setTotal(total);
-        }
-        return orderResponse;
+                    orderResponse.setTotal(total);
+                    return orderResponse;
+                });
     }
 
-    public List<OrderDto.OrderResponse> getOrdersByMejaId(UUID mejaId) {
+    private void handleUnavailableItem(OrderDto.OrderItemResponse itemResponse) {
+        itemResponse.setMenuItemName("[Unavailable Item]");
+        itemResponse.setMenuItemDescription("This menu item is Unavailable.");
+        itemResponse.setMenuItemCategory("Unavailable");
+
+        if (itemResponse.getPrice() == null) {
+            itemResponse.setPrice(0.0);
+        }
+
+        double subtotal = itemResponse.getPrice() * itemResponse.getQuantity();
+        itemResponse.setSubtotal(subtotal);
+    }
+
+    public List<CompletableFuture<OrderDto.OrderResponse>> getOrdersByMejaId(UUID mejaId) {
         List<Order> orders = orderRepository.findByMejaId(mejaId);
         return orders.stream()
                 .map(orderMapper::toDto)
-                .map(this::enrichOrderResponse)
+                .map(this::enrichOrderResponseAsync)
                 .collect(Collectors.toList());
     }
 
-    public OrderDto.OrderResponse getOrderById(UUID orderId) {
+    public CompletableFuture<OrderDto.OrderResponse> getOrderById(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-        return enrichOrderResponse(orderMapper.toDto(order));
+        return enrichOrderResponseAsync(orderMapper.toDto(order));
     }
 
     @Transactional
-    public OrderDto.OrderResponse addItemToOrder(UUID orderId, OrderDto.OrderItemRequest itemRequest) {
+    public CompletableFuture<OrderDto.OrderResponse> addItemToOrder(UUID orderId, OrderDto.OrderItemRequest itemRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
-        if (!menuServiceClient.verifyMenuItemExists(itemRequest.getMenuItemId())) {
-            throw new NoSuchElementException("Menu item not found with ID: " + itemRequest.getMenuItemId());
+        if (order.getLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
         }
 
+        menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
 
         OrderItem existingItem = orderItemRepository
                 .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
@@ -135,13 +156,17 @@ public class OrderServiceImpl implements OrderService {
         }
 
         Order updatedOrder = orderRepository.save(order);
-        return enrichOrderResponse(orderMapper.toDto(updatedOrder));
+        return enrichOrderResponseAsync(orderMapper.toDto(updatedOrder));
     }
 
     @Transactional
-    public OrderDto.OrderResponse updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
+    public CompletableFuture<OrderDto.OrderResponse> updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        if (order.getLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
+        }
 
         OrderItem itemToUpdate = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
@@ -151,13 +176,17 @@ public class OrderServiceImpl implements OrderService {
         itemToUpdate.setQuantity(updateRequest.getQuantity());
         Order updatedOrder = orderRepository.save(order);
 
-        return orderMapper.toDto(updatedOrder);
+        return enrichOrderResponseAsync(orderMapper.toDto(updatedOrder));
     }
 
     @Transactional
     public OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        if (order.getLocked()) {
+            throw new IllegalStateException("Cannot modify order because it has been checked out");
+        }
 
         OrderItem itemToRemove = order.getOrderItems().stream()
                 .filter(item -> item.getId().equals(itemId))
@@ -176,6 +205,10 @@ public class OrderServiceImpl implements OrderService {
     public void deleteOrder(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        if (order.getLocked()) {
+            throw new IllegalStateException("Cannot delete order because it has been checked out");
+        }
 
         orderRepository.delete(order);
     }
