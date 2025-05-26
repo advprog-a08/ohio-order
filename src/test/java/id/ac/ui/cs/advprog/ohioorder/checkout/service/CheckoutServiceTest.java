@@ -122,6 +122,27 @@ public class CheckoutServiceTest {
     }
 
     @Test
+    void testFindAllEmpty() {
+        when(checkoutRepository.findAll()).thenReturn(List.of());
+
+        List<Checkout> result = checkoutService.findAll();
+
+        assertTrue(result.isEmpty());
+        verify(checkoutRepository).findAll();
+    }
+
+    @Test
+    void testFindAllFound() {
+        when(checkoutRepository.findAll()).thenReturn(List.of(checkout));
+
+        List<Checkout> result = checkoutService.findAll();
+
+        assertEquals(1, result.toArray().length);
+        assertEquals(checkout, result.getFirst());
+        verify(checkoutRepository).findAll();
+    }
+
+    @Test
     void testFindByIdNotFound() {
         when(checkoutRepository.findById(checkoutId)).thenReturn(Optional.empty());
 
