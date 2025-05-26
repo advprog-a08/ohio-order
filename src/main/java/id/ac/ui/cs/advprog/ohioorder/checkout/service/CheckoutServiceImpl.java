@@ -1,39 +1,35 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.service;
 
+import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutResponse;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.repository.CheckoutRepository;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.client.MenuServiceClient;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderMapper;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class CheckoutServiceImpl implements CheckoutService {
+
     private final CheckoutRepository checkoutRepository;
     private final OrderRepository orderRepository;
     private final MenuItemQuantityValidator quantityValidator;
     private final MenuServiceClient menuServiceClient;
-
-    public CheckoutServiceImpl(CheckoutRepository checkoutRepository,
-                               OrderRepository orderRepository,
-                               MenuItemQuantityValidator quantityValidator,
-                               MenuServiceClient menuServiceClient) {
-        this.checkoutRepository = checkoutRepository;
-        this.orderRepository = orderRepository;
-        this.quantityValidator = quantityValidator;
-        this.menuServiceClient = menuServiceClient;
-    }
+    private final OrderService orderService;
+    private final OrderMapper orderMapper;
 
     @Override
     public Checkout save(Checkout checkout) {
@@ -60,7 +56,25 @@ public class CheckoutServiceImpl implements CheckoutService {
 
     @Override
     public List<Checkout> findAll() {
-        return checkoutRepository.findAll();
+        return checkoutRepository.findAllOrderByOrderCreatedAt();
+    }
+
+    @Override
+    public List<CheckoutResponse> findAllFormatted() {
+        return checkoutRepository.findAllOrderByOrderCreatedAt()
+                .stream()
+                .map(checkout -> {
+                    OrderDto.OrderResponse orderResponse = orderMapper.toDto(checkout.getOrder());
+                    CompletableFuture<OrderDto.OrderResponse> enrichedFuture = orderService.enrichOrderResponseAsync(orderResponse);
+                    return enrichedFuture.thenApply(enriched -> {
+                        CheckoutResponse response = new CheckoutResponse();
+                        response.setCheckout(checkout);
+                        response.setOrder(enriched);
+                        return response;
+                    });
+                })
+                .map(CompletableFuture::join)
+                .toList();
     }
 
     public void validateQuantitiesBeforeNextState(Checkout checkout) throws InsufficientQuantityException {

@@ -27,8 +27,8 @@ public class CheckoutController {
 
     @GetMapping
     @RequireAdmin
-    public ResponseEntity<List<Checkout>> findAll() {
-        return ResponseEntity.ok(checkoutService.findAll());
+    public ResponseEntity<?> findAll() {
+        return ResponseEntity.ok(checkoutService.findAllFormatted());
     }
 
     @GetMapping("{checkoutId}")

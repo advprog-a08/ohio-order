@@ -12,4 +12,7 @@ import java.util.UUID;
 public interface CheckoutRepository extends JpaRepository<Checkout, UUID> {
     @Query("SELECT DISTINCT c FROM Checkout c JOIN FETCH c.order")
     List<Checkout> findAllComplete();
+
+    @Query("SELECT c FROM Checkout c ORDER BY c.order.createdAt")
+    List<Checkout> findAllOrderByOrderCreatedAt();
 }

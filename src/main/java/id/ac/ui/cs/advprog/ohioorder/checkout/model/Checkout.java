@@ -29,7 +29,7 @@ public class Checkout {
     @NotNull
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonManagedReference
+    @JsonIgnore
     private Order order;
 
     @JsonProperty("message")
