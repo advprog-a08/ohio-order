@@ -10,11 +10,15 @@ import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
@@ -25,7 +29,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = CheckoutController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @Import({
+        CheckoutControllerTest.NoSecurityConfig.class,
         CheckoutControllerTest.TestConfig.class,
         CheckoutControllerTest.MockGrpcClientConfig.class,
         CheckoutControllerTest.MockInterceptorConfig.class
@@ -53,6 +59,17 @@ class CheckoutControllerTest {
         @Bean
         public AuthInterceptor authInterceptor() {
             return mock(AuthInterceptor.class);
+        }
+    }
+
+    @TestConfiguration
+    static class NoSecurityConfig {
+        @Bean
+        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http
+                    .cors(AbstractHttpConfigurer::disable).
+                    authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
         }
     }
 
