@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.ohioorder.meja.dto.MejaResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.dto.TableSessionResponse;
 import id.ac.ui.cs.advprog.ohioorder.meja.enums.MejaStatus;
 import id.ac.ui.cs.advprog.ohioorder.meja.service.MejaService;
+import id.ac.ui.cs.advprog.ohioorder.model.TableSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -241,18 +243,23 @@ class MejaControllerTest {
     @Test
     void testDeactivateTableSessionReturnsDeactivatedSessionResponse() {
         String sessionId = "session-123";
+        String tableId = uuid.toString();
+        String orderId = UUID.randomUUID().toString();
+
         TableSessionResponse deactivatedResponse = TableSessionResponse.builder()
-                .tableId(uuid.toString())
+                .tableId(tableId)
                 .sessionId(sessionId)
                 .isActive(false)
                 .message("Session deactivated successfully")
                 .build();
+
+        TableSession tableSession = new TableSession(sessionId, tableId, orderId, Optional.empty(), true);
                 
         when(mejaService.deactivateTableSession(sessionId))
                 .thenReturn(CompletableFuture.completedFuture(deactivatedResponse));
 
         CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = 
-                mejaController.deactivateTableSession(sessionId);
+                mejaController.deactivateTableSession(tableSession);
         ResponseEntity<TableSessionResponse> result = resultFuture.join();
         
         assertEquals(HttpStatus.OK, result.getStatusCode());
@@ -266,13 +273,18 @@ class MejaControllerTest {
     @Test
     void testDeactivateTableSessionWithExceptionalCompletion() {
         String sessionId = "invalid-session";
+        String tableId = uuid.toString();
+        String orderId = UUID.randomUUID().toString();
+
         CompletableFuture<TableSessionResponse> failedFuture = new CompletableFuture<>();
         failedFuture.completeExceptionally(new RuntimeException("Session deactivation failed"));
+
+        TableSession tableSession = new TableSession(sessionId, tableId, orderId, Optional.empty(), true);
         
         when(mejaService.deactivateTableSession(sessionId)).thenReturn(failedFuture);
 
         CompletableFuture<ResponseEntity<TableSessionResponse>> resultFuture = 
-                mejaController.deactivateTableSession(sessionId);
+                mejaController.deactivateTableSession(tableSession);
         
         CompletionException exception = assertThrows(
                 CompletionException.class,
