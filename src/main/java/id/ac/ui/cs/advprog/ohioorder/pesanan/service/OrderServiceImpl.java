@@ -34,12 +34,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public CompletableFuture<OrderDto.OrderResponse> createOrder(OrderDto.OrderRequest orderRequest, UUID tableId) {
-        if (orderRequest.getItems() != null) {
-            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
-                menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
-            }
-        }
-
         if (orderRequest.getItems() != null && !orderRequest.getItems().isEmpty()) {
             Set<String> uniqueMenuItems = new HashSet<>();
             List<String> duplicateItems = new ArrayList<>();
@@ -138,14 +132,9 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    public CompletableFuture<OrderDto.OrderResponse> getOrderById(UUID orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-        return enrichOrderResponseAsync(orderMapper.toDto(order));
-    }
-
     @Transactional
-    public CompletableFuture<OrderDto.OrderResponse> addItemToOrder(UUID orderId, OrderDto.OrderItemRequest itemRequest) {
+    public CompletableFuture<OrderDto.OrderResponse> updateOrder(String sessionOrderId, OrderDto.OrderRequest orderRequest) {
+        UUID orderId = UUID.fromString(sessionOrderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
@@ -153,21 +142,41 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Cannot modify order because it has been checked out");
         }
 
-        menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+        if (orderRequest.getItems() != null) {
+            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
+                menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
+            }
 
-        OrderItem existingItem = orderItemRepository
-                .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
-                .orElse(null);
+            Set<String> uniqueMenuItems = new HashSet<>();
+            List<String> duplicateItems = new ArrayList<>();
 
-        if (existingItem != null) {
-            existingItem.setQuantity(existingItem.getQuantity() + itemRequest.getQuantity());
-            orderItemRepository.save(existingItem);
-        } else {
-            OrderItem newItem = OrderItem.builder()
-                    .menuItemId(itemRequest.getMenuItemId())
-                    .quantity(itemRequest.getQuantity())
-                    .build();
-            order.addOrderItem(newItem);
+            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
+                String menuItemId = itemRequest.getMenuItemId();
+                if (!uniqueMenuItems.add(menuItemId)) {
+                    duplicateItems.add(menuItemId);
+                }
+            }
+
+            if (!duplicateItems.isEmpty()) {
+                throw new IllegalArgumentException("Duplicate menu items found: " + String.join(", ", duplicateItems));
+            }
+
+            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
+                OrderItem existingItem = orderItemRepository
+                        .findByOrderIdAndMenuItemId(orderId, itemRequest.getMenuItemId())
+                        .orElse(null);
+
+                if (existingItem != null) {
+                    existingItem.setQuantity(itemRequest.getQuantity());
+                    orderItemRepository.save(existingItem);
+                } else {
+                    OrderItem newItem = OrderItem.builder()
+                            .menuItemId(itemRequest.getMenuItemId())
+                            .quantity(itemRequest.getQuantity())
+                            .build();
+                    order.addOrderItem(newItem);
+                }
+            }
         }
 
         Order updatedOrder = orderRepository.save(order);
@@ -175,27 +184,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public CompletableFuture<OrderDto.OrderResponse> updateOrderItem(UUID orderId, UUID itemId, OrderDto.UpdateOrderItemRequest updateRequest) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
-
-        if (order.getLocked()) {
-            throw new IllegalStateException("Cannot modify order because it has been checked out");
-        }
-
-        OrderItem itemToUpdate = order.getOrderItems().stream()
-                .filter(item -> item.getId().equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new NoSuchElementException("Order item not found with ID: " + itemId));
-
-        itemToUpdate.setQuantity(updateRequest.getQuantity());
-        Order updatedOrder = orderRepository.save(order);
-
-        return enrichOrderResponseAsync(orderMapper.toDto(updatedOrder));
-    }
-
-    @Transactional
-    public OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId) {
+    public OrderDto.OrderResponse removeItemFromOrder(String sessionOrderId, UUID itemId) {
+        UUID orderId = UUID.fromString(sessionOrderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 

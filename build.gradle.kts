@@ -49,7 +49,7 @@ dependencies {
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    testImplementation("org.springframework.security:spring-security-test")
+    implementation("org.springframework.security:spring-security-test")
     compileOnly("javax.annotation:javax.annotation-api:1.3.2")
 
     compileOnly("org.projectlombok:lombok")
