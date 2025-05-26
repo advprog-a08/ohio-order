@@ -43,10 +43,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // gRPC dependencies
-    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter:0.4.0")
+    implementation("net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("com.google.protobuf:protobuf-java:$protobufVersion")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    testImplementation("org.springframework.security:spring-security-test")
     compileOnly("javax.annotation:javax.annotation-api:1.3.2")
 
     compileOnly("org.projectlombok:lombok")
