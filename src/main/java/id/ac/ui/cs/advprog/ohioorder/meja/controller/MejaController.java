@@ -58,7 +58,6 @@ public class MejaController {
     }
 
     @GetMapping("/nomor/{nomorMeja}")
-    @RequireAdmin
     public ResponseEntity<MejaResponse> getMejaByNomorMeja(@PathVariable String nomorMeja) {
         return ResponseEntity.ok(mejaService.getMejaByNomorMeja(nomorMeja));
     }
