@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -32,6 +33,7 @@ class OrderControllerTest {
     private OrderController orderController;
 
     private UUID mejaId;
+    private UUID orderId;
     private OrderDto.OrderRequest orderRequest;
     private UUID orderResponseId;
     private OrderDto.OrderResponse orderResponse;
@@ -43,8 +45,9 @@ class OrderControllerTest {
     @BeforeEach
     void setUp() {
         mejaId = UUID.randomUUID();
+        orderId = UUID.randomUUID();
 
-        mockTableSession = new TableSession("session-123", mejaId.toString(), true);
+        mockTableSession = new TableSession("session-123", mejaId.toString(), orderId.toString(), Optional.empty(), true);
 
         orderRequest = OrderDto.OrderRequest.builder()
                 .items(List.of(
