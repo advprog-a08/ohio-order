@@ -116,15 +116,10 @@ class OrderControllerTest {
 
         when(orderService.removeItemFromOrder(String.valueOf(orderId), itemId)).thenReturn(orderResponse);
 
-        ResponseEntity<OrderDto.OrderResponse> response =
-                orderController.removeItemFromOrder(mockTableSession, itemId);
+        ResponseEntity<Void> response = orderController.removeItemFromOrder(mockTableSession, itemId);
 
         assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(orderResponse, response.getBody());
-
-        verify(orderService).removeItemFromOrder(String.valueOf(orderId), itemId);
-    }
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());}
 
     @Test
     void deleteOrder_Success() {

@@ -42,11 +42,11 @@ public class OrderController {
 
     @DeleteMapping("/items/{itemId}")
     @RequireTableSession
-    public ResponseEntity<OrderDto.OrderResponse> removeItemFromOrder(
+    public ResponseEntity<Void> removeItemFromOrder(
             @AuthenticatedTableSession TableSession session,
             @PathVariable UUID itemId) {
         OrderDto.OrderResponse response = orderService.removeItemFromOrder(session.getOrderId(), itemId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{orderId}")
