@@ -7,11 +7,9 @@ import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,23 +20,15 @@ public class OrderController {
 
     private final OrderServiceImpl orderService;
 
-    @PostMapping
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> createOrder(
-            @AuthenticatedTableSession TableSession session,
-            @Valid @RequestBody OrderDto.OrderRequest orderRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response =
-                orderService.createOrder(orderRequest, UUID.fromString(session.getTableId()));
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
     @GetMapping("/table")
     @RequireTableSession
-    public ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> getOrdersByTableSession(
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> getOrdersByTableSession(
             @AuthenticatedTableSession TableSession session) {
-        List<CompletableFuture<OrderDto.OrderResponse>> responses =
-                orderService.getOrdersByMejaId(UUID.fromString(session.getTableId()));
-        return ResponseEntity.ok(responses);
+
+        CompletableFuture<OrderDto.OrderResponse> response = 
+            orderService.getOrderById(UUID.fromString(session.getOrderId()));
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping
@@ -52,11 +42,11 @@ public class OrderController {
 
     @DeleteMapping("/items/{itemId}")
     @RequireTableSession
-    public ResponseEntity<OrderDto.OrderResponse> removeItemFromOrder(
+    public ResponseEntity<Void> removeItemFromOrder(
             @AuthenticatedTableSession TableSession session,
             @PathVariable UUID itemId) {
         OrderDto.OrderResponse response = orderService.removeItemFromOrder(session.getOrderId(), itemId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{orderId}")

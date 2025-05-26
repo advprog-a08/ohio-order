@@ -124,12 +124,12 @@ public class OrderServiceImpl implements OrderService {
         itemResponse.setSubtotal(subtotal);
     }
 
-    public List<CompletableFuture<OrderDto.OrderResponse>> getOrdersByMejaId(UUID mejaId) {
-        List<Order> orders = orderRepository.findByMejaId(mejaId);
-        return orders.stream()
-                .map(orderMapper::toDto)
-                .map(this::enrichOrderResponseAsync)
-                .collect(Collectors.toList());
+    public CompletableFuture<OrderDto.OrderResponse> getOrderById(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
+
+        OrderDto.OrderResponse orderResponse = orderMapper.toDto(order);
+        return enrichOrderResponseAsync(orderResponse);
     }
 
     @Transactional
