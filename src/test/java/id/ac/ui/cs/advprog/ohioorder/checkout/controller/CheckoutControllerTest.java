@@ -21,6 +21,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -139,6 +140,17 @@ class CheckoutControllerTest {
                         .content(requestJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(validOrderId.toString()));
+    }
+
+    @Test
+    void findAll_shouldReturnAllCheckout() throws Exception {
+        doReturn(List.of(mockCheckout)).when(checkoutService).findAll();
+
+        mockMvc.perform(get("/api/checkout"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(mockCheckout.getId().toString()))
+                .andExpect(jsonPath("$[0].state").value("DRAFT"));
     }
 
     @Test
