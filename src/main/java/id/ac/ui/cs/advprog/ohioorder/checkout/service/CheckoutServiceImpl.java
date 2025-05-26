@@ -40,6 +40,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         return checkoutRepository.save(checkout);
     }
 
+    @Override
     public Optional<Checkout> create(UUID orderId) {
         Checkout checkout = new Checkout();
 
@@ -55,6 +56,11 @@ public class CheckoutServiceImpl implements CheckoutService {
     @Override
     public Optional<Checkout> findById(String id) {
         return checkoutRepository.findById(UUID.fromString(id));
+    }
+
+    @Override
+    public List<Checkout> findAll() {
+        return checkoutRepository.findAll();
     }
 
     public void validateQuantitiesBeforeNextState(Checkout checkout) throws InsufficientQuantityException {
