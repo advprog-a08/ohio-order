@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.h2.table.Table;
 import org.springframework.stereotype.Service;
 import table_session.TableSessionOuterClass;
 import table_session.TableSessionServiceGrpc;
@@ -18,9 +19,10 @@ public class TableSessionGrpcClient {
         stub = TableSessionServiceGrpc.newBlockingStub(channel);
     }
 
-    public TableSessionOuterClass.TableSessionResponse createTableSession(String tableId) {
+    public TableSessionOuterClass.TableSessionResponse createTableSession(String tableId, String orderId) {
         TableSessionOuterClass.TableIdRequest request = TableSessionOuterClass.TableIdRequest.newBuilder()
                 .setTableId(tableId)
+                .setOrderId(orderId)
                 .build();
         return stub.createTableSession(request);
     }
@@ -33,9 +35,18 @@ public class TableSessionGrpcClient {
     }
 
     public TableSessionOuterClass.TableSessionResponse deactivateTableSession(String sessionId) {
-        TableSessionOuterClass.SessionIdRequest request = TableSessionOuterClass.SessionIdRequest.newBuilder()
-                .setSessionId(sessionId)
+        TableSessionOuterClass.IsActiveRequest request = TableSessionOuterClass.IsActiveRequest.newBuilder()
+                .setId(sessionId)
+                .setValue(false)
                 .build();
-        return stub.deactivateTableSession(request);
+        return stub.setIsActiveToTableSession(request);
+    }
+
+    public TableSessionOuterClass.TableSessionResponse setCheckoutIdToTableSession(String sessionId, String checkoutId) {
+        TableSessionOuterClass.CheckoutIdRequest request = TableSessionOuterClass.CheckoutIdRequest.newBuilder()
+                .setId(sessionId)
+                .setCheckoutId(checkoutId)
+                .build();
+        return stub.setCheckoutIdToTableSession(request);
     }
 }
