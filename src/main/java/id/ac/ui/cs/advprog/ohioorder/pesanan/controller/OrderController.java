@@ -41,40 +41,21 @@ public class OrderController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/{orderId}")
+    @PutMapping
     @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> getOrderById(
-            @PathVariable UUID orderId) {
-        CompletableFuture<OrderDto.OrderResponse> response = orderService.getOrderById(orderId);
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrder(
+            @AuthenticatedTableSession TableSession session,
+            @Valid @RequestBody OrderDto.OrderRequest orderRequest) {
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.updateOrder(session.getOrderId(), orderRequest);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{orderId}/items")
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> addItemToOrder(
-            @PathVariable UUID orderId,
-            @Valid @RequestBody OrderDto.OrderItemRequest itemRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response = orderService.addItemToOrder(orderId, itemRequest);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{orderId}/items/{itemId}")
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrderItem(
-            @PathVariable UUID orderId,
-            @PathVariable UUID itemId,
-            @Valid @RequestBody OrderDto.UpdateOrderItemRequest updateRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response =
-                orderService.updateOrderItem(orderId, itemId, updateRequest);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{orderId}/items/{itemId}")
+    @DeleteMapping("/items/{itemId}")
     @RequireTableSession
     public ResponseEntity<OrderDto.OrderResponse> removeItemFromOrder(
-            @PathVariable UUID orderId,
+            @AuthenticatedTableSession TableSession session,
             @PathVariable UUID itemId) {
-        OrderDto.OrderResponse response = orderService.removeItemFromOrder(orderId, itemId);
+        OrderDto.OrderResponse response = orderService.removeItemFromOrder(session.getOrderId(), itemId);
         return ResponseEntity.ok(response);
     }
 
