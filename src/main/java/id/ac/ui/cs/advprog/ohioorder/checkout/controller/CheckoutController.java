@@ -10,6 +10,8 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/checkout")
 public class CheckoutController {
@@ -17,6 +19,12 @@ public class CheckoutController {
 
     public CheckoutController(CheckoutService checkoutService) {
         this.checkoutService = checkoutService;
+    }
+
+    @GetMapping
+    @RequireAdmin
+    public ResponseEntity<List<Checkout>> findAll() {
+        return ResponseEntity.ok(checkoutService.findAll());
     }
 
     @GetMapping("{checkoutId}")
