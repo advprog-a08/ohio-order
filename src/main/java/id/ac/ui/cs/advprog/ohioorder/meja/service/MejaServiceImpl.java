@@ -141,7 +141,7 @@ public class MejaServiceImpl implements MejaService {
             Meja meja = mejaRepository.findById(id)
                     .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
 
-            Order order = Order.builder().meja(meja).build();
+            Order order = Order.builder().meja(meja).locked(false).build();
             Order dbOrder = orderRepository.save(order);
 
             TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.createTableSession(
