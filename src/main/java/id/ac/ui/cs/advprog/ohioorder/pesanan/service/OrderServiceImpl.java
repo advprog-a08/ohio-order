@@ -34,12 +34,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public CompletableFuture<OrderDto.OrderResponse> createOrder(OrderDto.OrderRequest orderRequest, UUID tableId) {
-        if (orderRequest.getItems() != null) {
-            for (OrderDto.OrderItemRequest itemRequest : orderRequest.getItems()) {
-                menuServiceClient.getMenuItem(itemRequest.getMenuItemId());
-            }
-        }
-
         if (orderRequest.getItems() != null && !orderRequest.getItems().isEmpty()) {
             Set<String> uniqueMenuItems = new HashSet<>();
             List<String> duplicateItems = new ArrayList<>();
@@ -139,7 +133,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public CompletableFuture<OrderDto.OrderResponse> updateOrder(UUID orderId, OrderDto.OrderRequest orderRequest) {
+    public CompletableFuture<OrderDto.OrderResponse> updateOrder(String sessionOrderId, OrderDto.OrderRequest orderRequest) {
+        UUID orderId = UUID.fromString(sessionOrderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 
@@ -189,7 +184,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public OrderDto.OrderResponse removeItemFromOrder(UUID orderId, UUID itemId) {
+    public OrderDto.OrderResponse removeItemFromOrder(String sessionOrderId, UUID itemId) {
+        UUID orderId = UUID.fromString(sessionOrderId);
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
 

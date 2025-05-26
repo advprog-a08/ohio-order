@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -30,12 +31,12 @@ class OrderControllerTest {
     private OrderServiceImpl orderService;
 
     @InjectMocks
-    private OrderController orderController;    private UUID mejaId;
+    private OrderController orderController;
+
+    private UUID mejaId;
     private UUID orderId;
     private OrderDto.OrderRequest orderRequest;
-    private UUID orderResponseId;
     private OrderDto.OrderResponse orderResponse;
-    private UUID orderItemResponseId;
     private TableSession mockTableSession;
 
     @BeforeEach
@@ -54,8 +55,8 @@ class OrderControllerTest {
                 ))
                 .build();
 
-        orderResponseId = UUID.randomUUID();
-        orderItemResponseId = UUID.randomUUID();
+        UUID orderResponseId = UUID.randomUUID();
+        UUID orderItemResponseId = UUID.randomUUID();
         orderResponse = OrderDto.OrderResponse.builder()
                 .id(orderResponseId)
                 .mejaId(mejaId)
@@ -70,7 +71,8 @@ class OrderControllerTest {
                                 .subtotal(100000.0)
                                 .build()
                 ))
-                .total(100000.0)                .createdAt(LocalDateTime.now())
+                .total(100000.0)
+                .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
     }
@@ -105,15 +107,16 @@ class OrderControllerTest {
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
+        assertEquals(1, Objects.requireNonNull(response.getBody()).size());
 
-        OrderDto.OrderResponse actualResponse = response.getBody().get(0).join();
+        OrderDto.OrderResponse actualResponse = response.getBody().getFirst().join();
         assertEquals(orderResponse, actualResponse);
 
         verify(orderService).getOrdersByMejaId(mejaId);
-    }    @Test
+    }
+
+    @Test
     void updateOrder_Success() {
-        UUID orderId = UUID.randomUUID();
         OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
                 .items(List.of(
                         OrderDto.OrderItemRequest.builder()
@@ -123,11 +126,11 @@ class OrderControllerTest {
                 ))
                 .build();
 
-        when(orderService.updateOrder(eq(orderId), any(OrderDto.OrderRequest.class)))
+        when(orderService.updateOrder(eq(String.valueOf(orderId)), any(OrderDto.OrderRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(orderResponse));
 
         ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.updateOrder(orderId, updateRequest);
+                orderController.updateOrder(mockTableSession, updateRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -136,34 +139,35 @@ class OrderControllerTest {
         assertNotNull(future);
         assertEquals(orderResponse, future.join());
 
-        verify(orderService).updateOrder(orderId, updateRequest);
+        verify(orderService).updateOrder(String.valueOf(orderId), updateRequest);
     }
 
     @Test
     void removeItemFromOrder_Success() {
-        UUID orderId = UUID.randomUUID();
         UUID itemId = UUID.randomUUID();
-        when(orderService.removeItemFromOrder(orderId, itemId)).thenReturn(orderResponse);
+
+        when(orderService.removeItemFromOrder(String.valueOf(orderId), itemId)).thenReturn(orderResponse);
 
         ResponseEntity<OrderDto.OrderResponse> response =
-                orderController.removeItemFromOrder(orderId, itemId);
+                orderController.removeItemFromOrder(mockTableSession, itemId);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(orderResponse, response.getBody());
-        verify(orderService).removeItemFromOrder(orderId, itemId);
+
+        verify(orderService).removeItemFromOrder(String.valueOf(orderId), itemId);
     }
 
     @Test
     void deleteOrder_Success() {
-        UUID orderId = UUID.randomUUID();
-        doNothing().when(orderService).deleteOrder(orderId);
+        UUID orderIdToDelete = UUID.randomUUID();
+        doNothing().when(orderService).deleteOrder(orderIdToDelete);
 
-        ResponseEntity<Void> response = orderController.deleteOrder(orderId);
+        ResponseEntity<Void> response = orderController.deleteOrder(orderIdToDelete);
 
         assertNotNull(response);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         assertNull(response.getBody());
-        verify(orderService).deleteOrder(orderId);
+        verify(orderService).deleteOrder(orderIdToDelete);
     }
 }

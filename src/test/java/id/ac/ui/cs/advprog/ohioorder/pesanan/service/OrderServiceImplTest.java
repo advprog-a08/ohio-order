@@ -146,7 +146,7 @@ class OrderServiceImplTest {
         assertEquals(orderId, result.getId());
         assertEquals(mejaId, result.getMejaId());
 
-        verify(menuServiceClient, times(2)).getMenuItem("menu-1");
+        verify(menuServiceClient).getMenuItem("menu-1");
         verify(orderRepository).save(order);
     }
 
@@ -209,7 +209,7 @@ class OrderServiceImplTest {
         when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
                 CompletableFuture.completedFuture(List.of(menuServiceResponse)));
 
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(orderId, updateRequest);
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(String.valueOf(orderId), updateRequest);
         OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
@@ -249,7 +249,7 @@ class OrderServiceImplTest {
         when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
                 CompletableFuture.completedFuture(List.of(menuServiceResponse)));
 
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(orderId, updateRequest);
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(String.valueOf(orderId), updateRequest);
         OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
@@ -275,7 +275,7 @@ class OrderServiceImplTest {
                 .thenThrow(new NoSuchElementException("Menu item not found with ID: menu-nonexistent"));
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.updateOrder(orderId, updateRequest));
+                () -> orderService.updateOrder(String.valueOf(orderId), updateRequest));
         assertEquals("Menu item not found with ID: menu-nonexistent", exception.getMessage());
         verify(orderRepository, never()).save(any());
     }
@@ -295,7 +295,7 @@ class OrderServiceImplTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.updateOrder(orderId, updateRequest));
+                () -> orderService.updateOrder(String.valueOf(orderId), updateRequest));
         assertEquals("Order not found with ID: " + orderId, exception.getMessage());
     }
 
@@ -319,7 +319,7 @@ class OrderServiceImplTest {
         when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> orderService.updateOrder(orderId, updateRequest));
+                () -> orderService.updateOrder(String.valueOf(orderId), updateRequest));
 
         assertTrue(exception.getMessage().contains("Duplicate menu items found: menu-1"));
         verify(orderRepository, never()).save(any());
@@ -342,7 +342,7 @@ class OrderServiceImplTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.updateOrder(orderId, updateRequest).join());
+                () -> orderService.updateOrder(String.valueOf(orderId), updateRequest).join());
         assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
 
         verify(orderItemRepository, never()).findByOrderIdAndMenuItemId(any(), any());
@@ -366,7 +366,7 @@ class OrderServiceImplTest {
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toDto(order)).thenReturn(orderResponse);
 
-        OrderDto.OrderResponse result = orderService.removeItemFromOrder(orderId, itemId);
+        OrderDto.OrderResponse result = orderService.removeItemFromOrder(String.valueOf(orderId), itemId);
 
         assertNotNull(result);
         verify(orderItemRepository).delete(orderItem);
@@ -381,7 +381,7 @@ class OrderServiceImplTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.removeItemFromOrder(orderId, itemId));
+                () -> orderService.removeItemFromOrder(String.valueOf(orderId), itemId));
         assertEquals("Order item not found with ID: " + itemId, exception.getMessage());
     }
 
@@ -438,7 +438,7 @@ class OrderServiceImplTest {
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.removeItemFromOrder(orderId, itemId));
+                () -> orderService.removeItemFromOrder(String.valueOf(orderId), itemId));
         assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
 
         verify(orderItemRepository, never()).delete(any());

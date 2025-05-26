@@ -41,21 +41,21 @@ public class OrderController {
         return ResponseEntity.ok(responses);
     }
 
-    @PutMapping("/{orderId}")
+    @PutMapping
     @RequireTableSession
     public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrder(
-            @PathVariable UUID orderId,
+            @AuthenticatedTableSession TableSession session,
             @Valid @RequestBody OrderDto.OrderRequest orderRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response = orderService.updateOrder(orderId, orderRequest);
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.updateOrder(session.getOrderId(), orderRequest);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{orderId}/items/{itemId}")
+    @DeleteMapping("/items/{itemId}")
     @RequireTableSession
     public ResponseEntity<OrderDto.OrderResponse> removeItemFromOrder(
-            @PathVariable UUID orderId,
+            @AuthenticatedTableSession TableSession session,
             @PathVariable UUID itemId) {
-        OrderDto.OrderResponse response = orderService.removeItemFromOrder(orderId, itemId);
+        OrderDto.OrderResponse response = orderService.removeItemFromOrder(session.getOrderId(), itemId);
         return ResponseEntity.ok(response);
     }
 
