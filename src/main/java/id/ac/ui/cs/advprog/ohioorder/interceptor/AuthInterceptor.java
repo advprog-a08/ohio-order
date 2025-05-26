@@ -15,6 +15,8 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import table_session.TableSessionOuterClass;
 
+import java.util.Optional;
+
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
@@ -69,6 +71,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                     TableSession tableSession = new TableSession(
                             result.getTableSession().getId(),
                             result.getTableSession().getTableId(),
+                            result.getTableSession().getOrderId(),
+                            Optional.ofNullable(result.getTableSession().getCheckoutId()),
                             result.getTableSession().getIsActive()
                     );
 
