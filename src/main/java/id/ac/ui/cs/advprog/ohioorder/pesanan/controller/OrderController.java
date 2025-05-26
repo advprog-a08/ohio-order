@@ -7,14 +7,11 @@ import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -22,16 +19,6 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     private final OrderServiceImpl orderService;
-
-    @PostMapping
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> createOrder(
-            @AuthenticatedTableSession TableSession session,
-            @Valid @RequestBody OrderDto.OrderRequest orderRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response =
-                orderService.createOrder(orderRequest, UUID.fromString(session.getTableId()));
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
 
     @GetMapping("/table")
     @RequireTableSession

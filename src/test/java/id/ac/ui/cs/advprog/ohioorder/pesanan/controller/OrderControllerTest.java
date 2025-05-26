@@ -14,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -33,27 +32,16 @@ class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
 
-    private UUID mejaId;
     private UUID orderId;
-    private OrderDto.OrderRequest orderRequest;
     private OrderDto.OrderResponse orderResponse;
     private TableSession mockTableSession;
 
     @BeforeEach
     void setUp() {
-        mejaId = UUID.randomUUID();
+        UUID mejaId = UUID.randomUUID();
         orderId = UUID.randomUUID();
 
         mockTableSession = new TableSession("session-123", mejaId.toString(), orderId.toString(), Optional.empty(), true);
-
-        orderRequest = OrderDto.OrderRequest.builder()
-                .items(List.of(
-                        OrderDto.OrderItemRequest.builder()
-                                .menuItemId("menu-1")
-                                .quantity(2)
-                                .build()
-                ))
-                .build();
 
         UUID orderResponseId = UUID.randomUUID();
         UUID orderItemResponseId = UUID.randomUUID();
@@ -75,24 +63,6 @@ class OrderControllerTest {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-    }
-
-    @Test
-    void createOrder_Success() {
-        when(orderService.createOrder(any(OrderDto.OrderRequest.class), eq(mejaId)))
-                .thenReturn(CompletableFuture.completedFuture(orderResponse));
-
-        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.createOrder(mockTableSession, orderRequest);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-
-        CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
-        assertNotNull(future);
-        assertEquals(orderResponse, future.join());
-
-        verify(orderService).createOrder(orderRequest, mejaId);
     }
 
     @Test
