@@ -12,6 +12,9 @@ import id.ac.ui.cs.advprog.ohioorder.meja.factory.MejaResponseFactory;
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
 import id.ac.ui.cs.advprog.ohioorder.meja.repository.MejaRepository;
 import id.ac.ui.cs.advprog.ohioorder.meja.validation.MejaRequestValidator;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MejaServiceImpl implements MejaService {
 
+    private final OrderRepository orderRepository;
     private final MejaRepository mejaRepository;
     private final MejaRequestValidator validator;
     private final MejaResponseFactory responseFactory;
@@ -137,7 +141,13 @@ public class MejaServiceImpl implements MejaService {
             Meja meja = mejaRepository.findById(id)
                     .orElseThrow(() -> new MejaNotFoundException("Meja dengan ID " + id + " tidak ditemukan"));
 
-            TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.createTableSession(meja.getId().toString());
+            Order order = Order.builder().meja(meja).build();
+            Order dbOrder = orderRepository.save(order);
+
+            TableSessionOuterClass.TableSessionResponse grpcResponse = tableSessionGrpcClient.createTableSession(
+                    meja.getId().toString(),
+                    dbOrder.getId().toString()
+            );
 
             meja.setStatus(MejaStatus.TERISI);
             mejaRepository.save(meja);
