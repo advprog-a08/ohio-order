@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.pesanan.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Builder
@@ -31,6 +31,7 @@ public class Order {
     private Meja meja;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Column(name = "locked", nullable = false)

@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.model;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
@@ -20,15 +21,15 @@ import lombok.*;
 public class Checkout {
     @Id
     @GeneratedValue
-    private UUID id; 
+    private UUID id;
 
     @Enumerated(EnumType.STRING)
     private CheckoutStateType state;
 
     @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonIgnore
+    @JsonManagedReference
     private Order order;
 
     @JsonProperty("message")

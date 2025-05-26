@@ -72,7 +72,9 @@ public class AuthInterceptor implements HandlerInterceptor {
                             result.getTableSession().getId(),
                             result.getTableSession().getTableId(),
                             result.getTableSession().getOrderId(),
-                            Optional.ofNullable(result.getTableSession().getCheckoutId()),
+                            result.getTableSession().hasCheckoutId()
+                                    ? Optional.of(result.getTableSession().getCheckoutId())
+                                    : Optional.empty(),
                             result.getTableSession().getIsActive()
                     );
 

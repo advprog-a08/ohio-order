@@ -1,12 +1,14 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.ohioorder.annotation.AuthenticatedTableSession;
 import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
+import id.ac.ui.cs.advprog.ohioorder.model.TableSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +17,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.List;
 import java.util.Optional;
@@ -131,13 +137,17 @@ class CheckoutControllerTest {
     void create_shouldReturnCheckout_whenValidOrderId() throws Exception {
         doReturn(Optional.of(mockCheckout)).when(checkoutService).create(validOrderId);
 
-        String requestJson = objectMapper.writeValueAsString(CheckoutCreateRequest.builder()
-                .orderId(validOrderId)
-                .build());
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                validOrderId.toString(),
+                Optional.empty(),
+                true
+        );
 
         mockMvc.perform(post("/api/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .requestAttr("authenticatedTableSession", tableSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(validOrderId.toString()));
     }
