@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -34,11 +35,13 @@ public class OrderController {
 
     @GetMapping("/table")
     @RequireTableSession
-    public ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> getOrdersByTableSession(
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> getOrdersByTableSession(
             @AuthenticatedTableSession TableSession session) {
-        List<CompletableFuture<OrderDto.OrderResponse>> responses =
-                orderService.getOrdersByMejaId(UUID.fromString(session.getTableId()));
-        return ResponseEntity.ok(responses);
+
+        CompletableFuture<OrderDto.OrderResponse> response = 
+            orderService.getOrderById(UUID.fromString(session.getOrderId()));
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping

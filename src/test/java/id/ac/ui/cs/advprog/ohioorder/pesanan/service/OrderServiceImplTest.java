@@ -151,6 +151,92 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void getOrderById_Success() {
+        // Arrange
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderMapper.toDto(order)).thenReturn(orderResponse);
+        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
+                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
+
+        // Act
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.getOrderById(orderId);
+        OrderDto.OrderResponse result = futureResult.join();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(orderId, result.getId());
+        assertEquals(mejaId, result.getMejaId());
+        assertEquals("A1", result.getNomorMeja());
+        assertNotNull(result.getItems());
+        assertEquals(1, result.getItems().size());
+        assertEquals("Burger", result.getItems().get(0).getMenuItemName());
+        assertEquals(100000.0, result.getTotal());
+
+        verify(orderRepository).findById(orderId);
+        verify(orderMapper).toDto(order);
+        verify(menuServiceClient).getMultipleMenuItemsAsync(anyList());
+    }
+
+    @Test
+    void getOrderById_ThrowsException_WhenOrderNotFound() {
+        // Arrange
+        UUID nonExistentOrderId = UUID.randomUUID();
+        when(orderRepository.findById(nonExistentOrderId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
+                () -> orderService.getOrderById(nonExistentOrderId));
+
+        assertEquals("Order not found with ID: " + nonExistentOrderId, exception.getMessage());
+
+        verify(orderRepository).findById(nonExistentOrderId);
+        verify(orderMapper, never()).toDto((Order) any());
+        verify(menuServiceClient, never()).getMultipleMenuItemsAsync(anyList());
+    }
+
+    @Test
+    void getOrderById_Success_WithEmptyItems() {
+        // Arrange
+        Order orderWithoutItems = Order.builder()
+                .id(orderId)
+                .meja(meja)
+                .orderItems(new ArrayList<>())
+                .locked(false)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        OrderDto.OrderResponse responseWithoutItems = OrderDto.OrderResponse.builder()
+                .id(orderId)
+                .mejaId(mejaId)
+                .nomorMeja("A1")
+                .items(Collections.emptyList())
+                .total(0.0)
+                .createdAt(orderWithoutItems.getCreatedAt())
+                .updatedAt(orderWithoutItems.getUpdatedAt())
+                .build();
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(orderWithoutItems));
+        when(orderMapper.toDto(orderWithoutItems)).thenReturn(responseWithoutItems);
+
+        // Act
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.getOrderById(orderId);
+        OrderDto.OrderResponse result = futureResult.join();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(orderId, result.getId());
+        assertEquals(mejaId, result.getMejaId());
+        assertTrue(result.getItems().isEmpty());
+        assertEquals(0.0, result.getTotal());
+
+        verify(orderRepository).findById(orderId);
+        verify(orderMapper).toDto(orderWithoutItems);
+        // enrichOrderResponseAsync should still be called but with empty items
+        verify(menuServiceClient, never()).getMultipleMenuItemsAsync(anyList());
+    }
+
+    @Test
     void createOrder_ThrowsException_WhenMenuItemNotFound() {
         when(menuServiceClient.getMenuItem("menu-1"))
                 .thenThrow(new NoSuchElementException("Menu item not found with ID: menu-1"));
@@ -162,20 +248,6 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getOrdersByMejaId_Success() {
-        List<Order> orders = Arrays.asList(order);
-        when(orderRepository.findByMejaId(mejaId)).thenReturn(orders);
-        when(orderMapper.toDto(order)).thenReturn(orderResponse);
-
-        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
-                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
-
-        List<CompletableFuture<OrderDto.OrderResponse>> results = orderService.getOrdersByMejaId(mejaId);
-
-        assertNotNull(results);
-        assertEquals(1, results.size());
-        assertEquals(orderResponse, results.get(0).join());
-    }    @Test
     void updateOrder_Success_WithNewItems() {
         UUID orderId = UUID.randomUUID();
         OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()

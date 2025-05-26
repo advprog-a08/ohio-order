@@ -97,22 +97,20 @@ class OrderControllerTest {
 
     @Test
     void getOrdersByTableSession_Success() {
-        List<CompletableFuture<OrderDto.OrderResponse>> futureResponses =
-                List.of(CompletableFuture.completedFuture(orderResponse));
+        when(orderService.getOrderById(orderId))
+                .thenReturn(CompletableFuture.completedFuture(orderResponse));
 
-        when(orderService.getOrdersByMejaId(mejaId)).thenReturn(futureResponses);
-
-        ResponseEntity<List<CompletableFuture<OrderDto.OrderResponse>>> response =
+        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
                 orderController.getOrdersByTableSession(mockTableSession);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, Objects.requireNonNull(response.getBody()).size());
 
-        OrderDto.OrderResponse actualResponse = response.getBody().getFirst().join();
-        assertEquals(orderResponse, actualResponse);
+        CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
+        assertNotNull(future);
+        assertEquals(orderResponse, future.join());
 
-        verify(orderService).getOrdersByMejaId(mejaId);
+        verify(orderService).getOrderById(orderId);
     }
 
     @Test
