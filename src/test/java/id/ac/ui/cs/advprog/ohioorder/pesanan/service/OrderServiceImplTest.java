@@ -175,39 +175,16 @@ class OrderServiceImplTest {
         assertNotNull(results);
         assertEquals(1, results.size());
         assertEquals(orderResponse, results.get(0).join());
-    }
-
-    @Test
-    void getOrderById_Success() {
-        when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
-        when(orderMapper.toDto(order)).thenReturn(orderResponse);
-
-        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
-                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
-
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.getOrderById(orderId);
-        OrderDto.OrderResponse result = futureResult.join();
-
-        assertNotNull(result);
-        assertEquals(orderId, result.getId());
-    }
-
-    @Test
-    void getOrderById_ThrowsException_WhenOrderNotFound() {
+    }    @Test
+    void updateOrder_Success_WithNewItems() {
         UUID orderId = UUID.randomUUID();
-        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
-
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.getOrderById(orderId));
-        assertEquals("Order not found with ID: " + orderId, exception.getMessage());
-    }
-
-    @Test
-    void addItemToOrder_Success_WithNewItem() {
-        UUID orderId = UUID.randomUUID();
-        OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-2")
-                .quantity(1)
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-2")
+                                .quantity(1)
+                                .build()
+                ))
                 .build();
 
         MenuItemDto menuItem2 = MenuItemDto.builder()
@@ -232,7 +209,7 @@ class OrderServiceImplTest {
         when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
                 CompletableFuture.completedFuture(List.of(menuServiceResponse)));
 
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.addItemToOrder(orderId, itemRequest);
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(orderId, updateRequest);
         OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
@@ -245,11 +222,15 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void addItemToOrder_Success_WithExistingItem() {
+    void updateOrder_Success_WithExistingItems() {
         UUID orderId = UUID.randomUUID();
-        OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-1")
-                .quantity(1)
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(3)
+                                .build()
+                ))
                 .build();
 
         OrderItem existingItem = OrderItem.builder()
@@ -268,7 +249,7 @@ class OrderServiceImplTest {
         when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
                 CompletableFuture.completedFuture(List.of(menuServiceResponse)));
 
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.addItemToOrder(orderId, itemRequest);
+        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrder(orderId, updateRequest);
         OrderDto.OrderResponse result = futureResult.join();
 
         assertNotNull(result);
@@ -277,11 +258,15 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void addItemToOrder_ThrowsException_WhenMenuItemNotFound() {
+    void updateOrder_ThrowsException_WhenMenuItemNotFound() {
         UUID orderId = UUID.randomUUID();
-        OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-nonexistent")
-                .quantity(1)
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-nonexistent")
+                                .quantity(1)
+                                .build()
+                ))
                 .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
@@ -290,55 +275,78 @@ class OrderServiceImplTest {
                 .thenThrow(new NoSuchElementException("Menu item not found with ID: menu-nonexistent"));
 
         NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.addItemToOrder(orderId, itemRequest));
+                () -> orderService.updateOrder(orderId, updateRequest));
         assertEquals("Menu item not found with ID: menu-nonexistent", exception.getMessage());
         verify(orderRepository, never()).save(any());
     }
 
     @Test
-    void updateOrderItem_Success() {
+    void updateOrder_ThrowsException_WhenOrderNotFound() {
         UUID orderId = UUID.randomUUID();
-        UUID itemId = UUID.randomUUID();
-        OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
-                .quantity(3)
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(1)
+                                .build()
+                ))
                 .build();
 
-        OrderItem orderItem = OrderItem.builder()
-                .id(itemId)
-                .menuItemId("menu-1")
-                .quantity(2)
-                .build();
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
 
-        order.addOrderItem(orderItem);
-
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-        when(orderRepository.save(order)).thenReturn(order);
-        when(orderMapper.toDto(order)).thenReturn(orderResponse);
-
-        when(menuServiceClient.getMultipleMenuItemsAsync(anyList())).thenReturn(
-                CompletableFuture.completedFuture(List.of(menuServiceResponse)));
-
-        CompletableFuture<OrderDto.OrderResponse> futureResult = orderService.updateOrderItem(orderId, itemId, updateRequest);
-        OrderDto.OrderResponse result = futureResult.join();
-
-        assertNotNull(result);
-        assertEquals(3, orderItem.getQuantity());
-        verify(orderRepository).save(order);
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
+                () -> orderService.updateOrder(orderId, updateRequest));
+        assertEquals("Order not found with ID: " + orderId, exception.getMessage());
     }
 
     @Test
-    void updateOrderItem_ThrowsException_WhenItemNotFound() {
+    void updateOrder_ThrowsException_WhenDuplicateMenuItemsExist() {
         UUID orderId = UUID.randomUUID();
-        UUID itemId = UUID.randomUUID();
-        OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
-                .quantity(3)
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(1)
+                                .build(),
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(2)
+                                .build()
+                ))
                 .build();
 
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(menuServiceClient.getMenuItem("menu-1")).thenReturn(menuServiceResponse);
 
-        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
-                () -> orderService.updateOrderItem(orderId, itemId, updateRequest));
-        assertEquals("Order item not found with ID: " + itemId, exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> orderService.updateOrder(orderId, updateRequest));
+
+        assertTrue(exception.getMessage().contains("Duplicate menu items found: menu-1"));
+        verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void updateOrder_ThrowsException_WhenOrderIsLocked() {
+        UUID orderId = UUID.randomUUID();
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(1)
+                                .build()
+                ))
+                .build();
+
+        order.setLocked(true);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> orderService.updateOrder(orderId, updateRequest).join());
+        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
+
+        verify(orderItemRepository, never()).findByOrderIdAndMenuItemId(any(), any());
+        verify(orderRepository, never()).save(any());
     }
 
     @Test
@@ -413,56 +421,7 @@ class OrderServiceImplTest {
         OrderDto.OrderItemResponse item = result.getItems().get(0);
         assertEquals("[Unavailable Item]", item.getMenuItemName());
         assertNotNull(item.getSubtotal());
-    }
-
-    @Test
-    void addItemToOrder_ThrowsException_WhenOrderIsLocked() {
-        UUID orderId = UUID.randomUUID();
-        OrderDto.OrderItemRequest itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-1")
-                .quantity(1)
-                .build();
-
-        order.setLocked(true);
-
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.addItemToOrder(orderId, itemRequest).join());
-        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
-
-        verify(orderItemRepository, never()).findByOrderIdAndMenuItemId(any(), any());
-        verify(orderRepository, never()).save(any());
-    }
-
-    @Test
-    void updateOrderItem_ThrowsException_WhenOrderIsLocked() {
-        UUID orderId = UUID.randomUUID();
-        UUID itemId = UUID.randomUUID();
-
-        OrderDto.UpdateOrderItemRequest updateRequest = OrderDto.UpdateOrderItemRequest.builder()
-                .quantity(3)
-                .build();
-
-        OrderItem orderItem = OrderItem.builder()
-                .id(itemId)
-                .menuItemId("menu-1")
-                .quantity(2)
-                .build();
-
-        order.addOrderItem(orderItem);
-        order.setLocked(true);
-
-        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
-
-        IllegalStateException exception = assertThrows(IllegalStateException.class,
-                () -> orderService.updateOrderItem(orderId, itemId, updateRequest).join());
-        assertEquals("Cannot modify order because it has been checked out", exception.getMessage());
-
-        verify(orderRepository, never()).save(any());
-    }
-
-    @Test
+    }    @Test
     void removeItemFromOrder_ThrowsException_WhenOrderIsLocked() {
         UUID orderId = UUID.randomUUID();
         UUID itemId = UUID.randomUUID();
@@ -510,7 +469,7 @@ class OrderServiceImplTest {
                                 .quantity(2)
                                 .build(),
                         OrderDto.OrderItemRequest.builder()
-                                .menuItemId("menu-1") // Same menuItemId
+                                .menuItemId("menu-1")
                                 .quantity(1)
                                 .build()
                 ))

@@ -41,31 +41,12 @@ public class OrderController {
         return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/{orderId}")
+    @PutMapping("/{orderId}")
     @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> getOrderById(
-            @PathVariable UUID orderId) {
-        CompletableFuture<OrderDto.OrderResponse> response = orderService.getOrderById(orderId);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/{orderId}/items")
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> addItemToOrder(
+    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrder(
             @PathVariable UUID orderId,
-            @Valid @RequestBody OrderDto.OrderItemRequest itemRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response = orderService.addItemToOrder(orderId, itemRequest);
-        return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{orderId}/items/{itemId}")
-    @RequireTableSession
-    public ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> updateOrderItem(
-            @PathVariable UUID orderId,
-            @PathVariable UUID itemId,
-            @Valid @RequestBody OrderDto.UpdateOrderItemRequest updateRequest) {
-        CompletableFuture<OrderDto.OrderResponse> response =
-                orderService.updateOrderItem(orderId, itemId, updateRequest);
+            @Valid @RequestBody OrderDto.OrderRequest orderRequest) {
+        CompletableFuture<OrderDto.OrderResponse> response = orderService.updateOrder(orderId, orderRequest);
         return ResponseEntity.ok(response);
     }
 

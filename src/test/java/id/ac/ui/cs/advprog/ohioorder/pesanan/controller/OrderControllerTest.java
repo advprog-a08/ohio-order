@@ -30,16 +30,12 @@ class OrderControllerTest {
     private OrderServiceImpl orderService;
 
     @InjectMocks
-    private OrderController orderController;
-
-    private UUID mejaId;
+    private OrderController orderController;    private UUID mejaId;
     private UUID orderId;
     private OrderDto.OrderRequest orderRequest;
     private UUID orderResponseId;
     private OrderDto.OrderResponse orderResponse;
     private UUID orderItemResponseId;
-    private OrderDto.OrderItemRequest itemRequest;
-    private OrderDto.UpdateOrderItemRequest updateItemRequest;
     private TableSession mockTableSession;
 
     @BeforeEach
@@ -74,18 +70,8 @@ class OrderControllerTest {
                                 .subtotal(100000.0)
                                 .build()
                 ))
-                .total(100000.0)
-                .createdAt(LocalDateTime.now())
+                .total(100000.0)                .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
-                .build();
-
-        itemRequest = OrderDto.OrderItemRequest.builder()
-                .menuItemId("menu-2")
-                .quantity(1)
-                .build();
-
-        updateItemRequest = OrderDto.UpdateOrderItemRequest.builder()
-                .quantity(3)
                 .build();
     }
 
@@ -100,7 +86,6 @@ class OrderControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
 
-        // Extract and verify the future result
         CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
         assertNotNull(future);
         assertEquals(orderResponse, future.join());
@@ -122,74 +107,36 @@ class OrderControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
 
-        // Extract and verify the future result
         OrderDto.OrderResponse actualResponse = response.getBody().get(0).join();
         assertEquals(orderResponse, actualResponse);
 
         verify(orderService).getOrdersByMejaId(mejaId);
-    }
-
-    @Test
-    void getOrderById_Success() {
+    }    @Test
+    void updateOrder_Success() {
         UUID orderId = UUID.randomUUID();
+        OrderDto.OrderRequest updateRequest = OrderDto.OrderRequest.builder()
+                .items(List.of(
+                        OrderDto.OrderItemRequest.builder()
+                                .menuItemId("menu-1")
+                                .quantity(3)
+                                .build()
+                ))
+                .build();
 
-        when(orderService.getOrderById(orderId)).thenReturn(CompletableFuture.completedFuture(orderResponse));
-
-        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.getOrderById(orderId);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        // Extract and verify the future result
-        CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
-        assertNotNull(future);
-        assertEquals(orderResponse, future.join());
-
-        verify(orderService).getOrderById(orderId);
-    }
-
-    @Test
-    void addItemToOrder_Success() {
-        UUID orderId = UUID.randomUUID();
-
-        when(orderService.addItemToOrder(eq(orderId), any(OrderDto.OrderItemRequest.class)))
+        when(orderService.updateOrder(eq(orderId), any(OrderDto.OrderRequest.class)))
                 .thenReturn(CompletableFuture.completedFuture(orderResponse));
 
         ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.addItemToOrder(orderId, itemRequest);
+                orderController.updateOrder(orderId, updateRequest);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
 
-        // Extract and verify the future result
         CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
         assertNotNull(future);
         assertEquals(orderResponse, future.join());
 
-        verify(orderService).addItemToOrder(orderId, itemRequest);
-    }
-
-    @Test
-    void updateOrderItem_Success() {
-        UUID orderId = UUID.randomUUID();
-        UUID itemId = UUID.randomUUID();
-
-        when(orderService.updateOrderItem(eq(orderId), eq(itemId), any(OrderDto.UpdateOrderItemRequest.class)))
-                .thenReturn(CompletableFuture.completedFuture(orderResponse));
-
-        ResponseEntity<CompletableFuture<OrderDto.OrderResponse>> response =
-                orderController.updateOrderItem(orderId, itemId, updateItemRequest);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-
-        // Extract and verify the future result
-        CompletableFuture<OrderDto.OrderResponse> future = response.getBody();
-        assertNotNull(future);
-        assertEquals(orderResponse, future.join());
-
-        verify(orderService).updateOrderItem(orderId, itemId, updateItemRequest);
+        verify(orderService).updateOrder(orderId, updateRequest);
     }
 
     @Test
