@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication
@@ -17,6 +18,11 @@ public class OhioOrderApplication {
 
         System.setProperty("grpc.host", dotenv.get("SIGMA_AUTHENTICATION_GRPC_HOST"));
         System.setProperty("grpc.port", dotenv.get("SIGMA_AUTHENTICATION_GRPC_PORT"));
+
+        System.out.println("Connecting to database at: " + System.getProperty("spring.datasource.url"));
+        System.out.println("Using menu service URL: " + System.getProperty("MENU_SERVICE_URL"));
+        System.out.println("gRPC host: " + System.getProperty("grpc.host"));
+        System.out.println("gRPC port: " + System.getProperty("grpc.port"));
 
         SpringApplication.run(OhioOrderApplication.class, args);
     }
