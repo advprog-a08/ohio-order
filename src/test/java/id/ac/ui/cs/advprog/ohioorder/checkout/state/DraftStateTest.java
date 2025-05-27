@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
+import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutServiceImpl;
@@ -9,8 +11,10 @@ import id.ac.ui.cs.advprog.ohioorder.pesanan.client.MenuServiceClient;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.devtools.v85.runtime.Runtime;
 import org.springframework.context.ApplicationContext;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,5 +72,35 @@ public class DraftStateTest {
 
         verify(order).setLocked(true);
         assertEquals(CheckoutStateType.ORDERED, checkout.getState());
+    }
+
+    @Test
+    void advance_throwsInvalidStateTransitionException_whenQuantityInsufficient() {
+        doThrow(InsufficientQuantityException.class).when(mockCheckoutService).validateQuantitiesBeforeNextState(checkout);
+
+        assertThrows(InvalidStateTransitionException.class, () -> checkout.advance());
+    }
+
+    @Test
+    void advance_throwsInvalidStateTransitionException_whenFailedToUpdate() {
+        doThrow(RuntimeException.class).when(mockCheckoutService).validateQuantitiesBeforeNextState(checkout);
+
+        assertThrows(RuntimeException.class, () -> checkout.advance());
+    }
+
+    @Test
+    void advance_continueToOrdered_whenContextEmpty() throws Exception {
+        Field contextField = DraftState.class.getDeclaredField("context");
+        contextField.setAccessible(true);
+        contextField.set(null, null);
+
+        checkout.advance();
+
+        assertEquals(CheckoutStateType.ORDERED, checkout.getState());
+    }
+
+    @Test
+    void message_getCorrectMessage() {
+        assertEquals("Hang tight! We’re confirming your order with the kitchen — we’ll update you shortly.", checkout.message());
     }
 }

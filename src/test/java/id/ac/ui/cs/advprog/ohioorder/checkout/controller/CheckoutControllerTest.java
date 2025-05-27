@@ -1,12 +1,13 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.service.CheckoutService;
 import id.ac.ui.cs.advprog.ohioorder.grpc.AdminGrpcClient;
+import id.ac.ui.cs.advprog.ohioorder.grpc.TableSessionGrpcClient;
 import id.ac.ui.cs.advprog.ohioorder.interceptor.AuthInterceptor;
+import id.ac.ui.cs.advprog.ohioorder.model.TableSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,11 @@ class CheckoutControllerTest {
         public AdminGrpcClient adminGrpcClient() {
             return mock(AdminGrpcClient.class);
         }
+
+        @Bean
+        public TableSessionGrpcClient tableSessionGrpcClient() {
+            return mock(TableSessionGrpcClient.class);
+        }
     }
 
     @TestConfiguration
@@ -85,6 +91,9 @@ class CheckoutControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private TableSessionGrpcClient tableSessionGrpcClient;
 
     private Checkout mockCheckout;
     private UUID validOrderId;
@@ -128,23 +137,81 @@ class CheckoutControllerTest {
     }
 
     @Test
+    void getMe_shouldReturn200_whenCustomerHasCheckedOut() throws Exception {
+        String checkoutId = UUID.randomUUID().toString();
+
+        mockCheckout.setState(CheckoutStateType.DRAFT);
+        doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(checkoutId);
+
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                Optional.of(checkoutId),
+                true
+        );
+
+        mockMvc.perform(get("/api/checkout/me").requestAttr("authenticatedTableSession", tableSession))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value(CheckoutStateType.DRAFT.toString()));
+    }
+
+    @Test
+    void getMe_shouldReturn400_whenCustomerHasNotCheckedOut() throws Exception {
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                Optional.empty(),
+                true
+        );
+
+        mockMvc.perform(get("/api/checkout/me").requestAttr("authenticatedTableSession", tableSession))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(tableSessionGrpcClient);
+    }
+
+    @Test
     void create_shouldReturnCheckout_whenValidOrderId() throws Exception {
         doReturn(Optional.of(mockCheckout)).when(checkoutService).create(validOrderId);
 
-        String requestJson = objectMapper.writeValueAsString(CheckoutCreateRequest.builder()
-                .orderId(validOrderId)
-                .build());
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                validOrderId.toString(),
+                Optional.empty(),
+                true
+        );
 
         mockMvc.perform(post("/api/checkout")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+                        .requestAttr("authenticatedTableSession", tableSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(validOrderId.toString()));
     }
 
     @Test
+    void create_shouldReturn400_whenFailedToCreate() throws Exception {
+        doReturn(Optional.empty()).when(checkoutService).create(validOrderId);
+
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                validOrderId.toString(),
+                Optional.empty(),
+                true
+        );
+
+        mockMvc.perform(post("/api/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .requestAttr("authenticatedTableSession", tableSession))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void findAll_shouldReturnAllCheckout() throws Exception {
-        doReturn(List.of(mockCheckout)).when(checkoutService).findAll();
+        doReturn(List.of(mockCheckout)).when(checkoutService).findAllFormatted();
 
         mockMvc.perform(get("/api/checkout"))
                 .andExpect(status().isOk())
@@ -154,12 +221,18 @@ class CheckoutControllerTest {
     }
 
     @Test
-    void cancel_shouldReturn404_whenCheckoutNotFound() throws Exception {
-        String orderId = UUID.randomUUID().toString();
-        doReturn(Optional.empty()).when(checkoutService).findById(orderId);
+    void cancel_shouldReturn400_whenCustomerHasNotCheckedOut() throws Exception {
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                Optional.empty(),
+                true
+        );
 
-        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/checkout/me")
+                        .requestAttr("authenticatedTableSession", tableSession))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -169,7 +242,15 @@ class CheckoutControllerTest {
         mockCheckout.setState(CheckoutStateType.DRAFT);
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                Optional.of(orderId),
+                true
+        );
+
+        mockMvc.perform(delete("/api/checkout/me").requestAttr("authenticatedTableSession", tableSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value(CheckoutStateType.CANCELLED.toString()));
     }
@@ -181,7 +262,15 @@ class CheckoutControllerTest {
         mockCheckout.setState(CheckoutStateType.CANCELLED);  // Already cancelled
         doReturn(Optional.of(mockCheckout)).when(checkoutService).findById(orderId);
 
-        mockMvc.perform(delete("/api/checkout/{checkoutId}", orderId))
+        TableSession tableSession = new TableSession(
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
+                Optional.of(orderId),
+                true
+        );
+
+        mockMvc.perform(delete("/api/checkout/me").requestAttr("authenticatedTableSession", tableSession))
                 .andExpect(status().isBadRequest());
     }
 

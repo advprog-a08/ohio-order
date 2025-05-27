@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.state;
 
-public class CancelledState extends CheckoutState {
+public final class CancelledState extends CheckoutState {
     private static final CancelledState INSTANCE = new CancelledState();
     private CancelledState() {}
 

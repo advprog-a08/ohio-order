@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.UUID;
 
 import id.ac.ui.cs.advprog.ohioorder.meja.model.Meja;
-import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Builder
@@ -38,10 +37,10 @@ public class Order {
     @Column(name = "locked", nullable = false)
     private Boolean locked = false;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, insertable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false)
     private LocalDateTime updatedAt;
 
     public void addOrderItem(OrderItem orderItem) {

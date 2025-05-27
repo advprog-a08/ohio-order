@@ -42,6 +42,14 @@ public class TableSessionGrpcClient {
         return stub.setIsActiveToTableSession(request);
     }
 
+    public TableSessionOuterClass.TableSessionResponse unsetCheckoutIdToTableSession(String sessionId) {
+        TableSessionOuterClass.CheckoutIdRequest request = TableSessionOuterClass.CheckoutIdRequest.newBuilder()
+                .setId(sessionId)
+                .clearCheckoutId()
+                .build();
+        return stub.setCheckoutIdToTableSession(request);
+    }
+
     public TableSessionOuterClass.TableSessionResponse setCheckoutIdToTableSession(String sessionId, String checkoutId) {
         TableSessionOuterClass.CheckoutIdRequest request = TableSessionOuterClass.CheckoutIdRequest.newBuilder()
                 .setId(sessionId)

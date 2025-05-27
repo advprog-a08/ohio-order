@@ -1,24 +1,27 @@
 package id.ac.ui.cs.advprog.ohioorder.checkout.service;
 
+import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutResponse;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 import id.ac.ui.cs.advprog.ohioorder.checkout.repository.CheckoutRepository;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.client.MenuServiceClient;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderDto;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.OrderMapper;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.Order;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.model.OrderItem;
 import id.ac.ui.cs.advprog.ohioorder.pesanan.repository.OrderRepository;
+import id.ac.ui.cs.advprog.ohioorder.pesanan.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -34,10 +37,16 @@ public class CheckoutServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
+    private OrderService orderService;
+
+    @Mock
     private MenuItemQuantityValidator quantityValidator;
 
     @Mock
     private MenuServiceClient menuServiceClient;
+
+    @Mock
+    private OrderMapper orderMapper;
 
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
@@ -123,23 +132,23 @@ public class CheckoutServiceTest {
 
     @Test
     void testFindAllEmpty() {
-        when(checkoutRepository.findAll()).thenReturn(List.of());
+        when(checkoutRepository.findAllOrderByOrderCreatedAt()).thenReturn(List.of());
 
         List<Checkout> result = checkoutService.findAll();
 
         assertTrue(result.isEmpty());
-        verify(checkoutRepository).findAll();
+        verify(checkoutRepository).findAllOrderByOrderCreatedAt();
     }
 
     @Test
     void testFindAllFound() {
-        when(checkoutRepository.findAll()).thenReturn(List.of(checkout));
+        when(checkoutRepository.findAllOrderByOrderCreatedAt()).thenReturn(List.of(checkout));
 
         List<Checkout> result = checkoutService.findAll();
 
         assertEquals(1, result.toArray().length);
         assertEquals(checkout, result.getFirst());
-        verify(checkoutRepository).findAll();
+        verify(checkoutRepository).findAllOrderByOrderCreatedAt();
     }
 
     @Test
@@ -175,16 +184,99 @@ public class CheckoutServiceTest {
         verify(quantityValidator).validateOrderItemsQuantity(order);
     }
 
+    private Checkout mockCheckoutWithItems(String... itemIds) {
+        Checkout checkout = new Checkout();
+        Order order = new Order();
+
+        List<OrderItem> items = Arrays.stream(itemIds)
+                .map(id -> {
+                    OrderItem item = new OrderItem();
+                    item.setMenuItemId(id);
+                    item.setQuantity(1);
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        order.setOrderItems(items);
+        checkout.setOrder(order);
+        return checkout;
+    }
+
     @Test
-    void reduceMenuItemQuantitiesSuccess() {
-        when(menuServiceClient.reduceMenuItemQuantityAsync("menu-1", 2))
-                .thenReturn(CompletableFuture.completedFuture(true));
-        when(menuServiceClient.reduceMenuItemQuantityAsync("menu-2", 3))
-                .thenReturn(CompletableFuture.completedFuture(true));
+    void testReduceMenuItemQuantities_AllSuccess() {
+        Checkout checkout = mockCheckoutWithItems("item1", "item2");
+
+        for (OrderItem item : checkout.getOrder().getOrderItems()) {
+            when(menuServiceClient.reduceMenuItemQuantityAsync(item.getMenuItemId(), item.getQuantity()))
+                    .thenReturn(CompletableFuture.completedFuture(true));
+        }
 
         assertDoesNotThrow(() -> checkoutService.reduceMenuItemQuantities(checkout));
+    }
 
-        verify(menuServiceClient).reduceMenuItemQuantityAsync("menu-1", 2);
-        verify(menuServiceClient).reduceMenuItemQuantityAsync("menu-2", 3);
+    @Test
+    void testReduceMenuItemQuantities_SomeFailures() {
+        Checkout checkout = mockCheckoutWithItems("item1", "item2");
+
+        when(menuServiceClient.reduceMenuItemQuantityAsync("item1", 1))
+                .thenReturn(CompletableFuture.completedFuture(true));
+        when(menuServiceClient.reduceMenuItemQuantityAsync("item2", 1))
+                .thenReturn(CompletableFuture.completedFuture(false));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            checkoutService.reduceMenuItemQuantities(checkout);
+        });
+
+        assertTrue(exception.getMessage().contains("item2"));
+    }
+
+    @Test
+    void testReduceMenuItemQuantities_ThrowsExecutionException() {
+        Checkout checkout = mockCheckoutWithItems("item1");
+
+        CompletableFuture<Boolean> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new RuntimeException("Service down"));
+
+        when(menuServiceClient.reduceMenuItemQuantityAsync("item1", 1))
+                .thenReturn(failedFuture);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            checkoutService.reduceMenuItemQuantities(checkout);
+        });
+
+        assertTrue(exception.getMessage().contains("Error reducing menu item quantities"));
+    }
+
+    @Test
+    void testReduceMenuItemQuantities_InterruptedException() throws Exception {
+        Checkout checkout = mockCheckoutWithItems("item1");
+
+        CompletableFuture<Boolean> interruptedFuture = Mockito.mock(CompletableFuture.class);
+        when(interruptedFuture.thenApply(any())).thenCallRealMethod();
+        when(menuServiceClient.reduceMenuItemQuantityAsync("item1", 1))
+                .thenReturn(interruptedFuture);
+
+        // Spy to override futures array to call get() on our mock
+        CheckoutServiceImpl serviceSpy = Mockito.spy(checkoutService);
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            serviceSpy.reduceMenuItemQuantities(checkout);
+        });
+    }
+
+    @Test
+    void findAllFormatted() {
+        when(checkoutRepository.findAllOrderByOrderCreatedAt()).thenReturn(List.of(checkout));
+
+        OrderDto.OrderResponse initialOrderResponse = new OrderDto.OrderResponse();
+        OrderDto.OrderResponse enrichedOrderResponse = new OrderDto.OrderResponse();
+
+        when(orderMapper.toDto(order)).thenReturn(initialOrderResponse);
+        when(orderService.enrichOrderResponseAsync(initialOrderResponse))
+                .thenReturn(CompletableFuture.completedFuture(enrichedOrderResponse));
+
+        List<CheckoutResponse> result = checkoutService.findAllFormatted();
+
+        assertEquals(1, result.size());
     }
 }

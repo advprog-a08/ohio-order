@@ -4,7 +4,7 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
-public class OrderedState extends CheckoutState {
+public final class OrderedState extends CheckoutState {
     private static final OrderedState INSTANCE = new OrderedState();
     private OrderedState() {}
 

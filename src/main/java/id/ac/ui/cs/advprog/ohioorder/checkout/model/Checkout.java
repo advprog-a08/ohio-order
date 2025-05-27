@@ -20,13 +20,13 @@ import lombok.*;
 public class Checkout {
     @Id
     @GeneratedValue
-    private UUID id; 
+    private UUID id;
 
     @Enumerated(EnumType.STRING)
     private CheckoutStateType state;
 
     @NotNull
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id", nullable = false)
     @JsonIgnore
     private Order order;
