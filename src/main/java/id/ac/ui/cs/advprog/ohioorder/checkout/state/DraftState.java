@@ -12,7 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DraftState extends CheckoutState {
+public final class DraftState extends CheckoutState {
     private static final DraftState INSTANCE = new DraftState();
     private static ApplicationContext context;
     private DraftState() {}

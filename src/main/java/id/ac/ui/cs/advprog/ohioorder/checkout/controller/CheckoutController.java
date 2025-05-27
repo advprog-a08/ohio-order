@@ -3,7 +3,6 @@ package id.ac.ui.cs.advprog.ohioorder.checkout.controller;
 import id.ac.ui.cs.advprog.ohioorder.annotation.AuthenticatedTableSession;
 import id.ac.ui.cs.advprog.ohioorder.annotation.RequireAdmin;
 import id.ac.ui.cs.advprog.ohioorder.annotation.RequireTableSession;
-import id.ac.ui.cs.advprog.ohioorder.checkout.dto.CheckoutCreateRequest;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InsufficientQuantityException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
@@ -14,7 +13,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

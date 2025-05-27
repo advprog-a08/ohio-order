@@ -4,7 +4,7 @@ import id.ac.ui.cs.advprog.ohioorder.checkout.enums.CheckoutStateType;
 import id.ac.ui.cs.advprog.ohioorder.checkout.exception.InvalidStateTransitionException;
 import id.ac.ui.cs.advprog.ohioorder.checkout.model.Checkout;
 
-public class PreparingState extends CheckoutState {
+public final class PreparingState extends CheckoutState {
     private static final PreparingState INSTANCE = new PreparingState();
     private PreparingState() {}
 
