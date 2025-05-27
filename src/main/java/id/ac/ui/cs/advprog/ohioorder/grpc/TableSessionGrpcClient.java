@@ -2,7 +2,7 @@ package id.ac.ui.cs.advprog.ohioorder.grpc;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import org.h2.table.Table;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import table_session.TableSessionOuterClass;
 import table_session.TableSessionServiceGrpc;
@@ -12,8 +12,11 @@ public class TableSessionGrpcClient {
 
     private final TableSessionServiceGrpc.TableSessionServiceBlockingStub stub;
 
-    public TableSessionGrpcClient() {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+    public TableSessionGrpcClient(
+            @Value("${grpc.host}") String host,
+            @Value("${grpc.port}") int port
+    ) {
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
                 .build();
         stub = TableSessionServiceGrpc.newBlockingStub(channel);

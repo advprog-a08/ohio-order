@@ -15,6 +15,9 @@ public class OhioOrderApplication {
         System.setProperty("spring.datasource.password", dotenv.get("DATABASE_PASSWORD"));
         System.setProperty("MENU_SERVICE_URL", dotenv.get("MENU_SERVICE_URL"));
 
+        System.setProperty("grpc.host", dotenv.get("SIGMA_AUTHENTICATION_GRPC_HOST"));
+        System.setProperty("grpc.port", dotenv.get("SIGMA_AUTHENTICATION_GRPC_PORT"));
+
         SpringApplication.run(OhioOrderApplication.class, args);
     }
 
