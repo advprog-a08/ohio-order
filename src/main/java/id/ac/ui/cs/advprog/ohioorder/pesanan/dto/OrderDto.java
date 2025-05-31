@@ -49,6 +49,7 @@ public class OrderDto {
         private List<OrderItemResponse> items;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private Boolean locked;
         private double total;
     }
 
