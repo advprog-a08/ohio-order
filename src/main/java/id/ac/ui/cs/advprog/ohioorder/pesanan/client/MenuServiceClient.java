@@ -1,8 +1,6 @@
 package id.ac.ui.cs.advprog.ohioorder.pesanan.client;
 
 import id.ac.ui.cs.advprog.ohioorder.pesanan.dto.MenuServiceResponse;
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,7 +16,6 @@ import java.util.stream.Collectors;
 @Component
 public class MenuServiceClient {
     private final WebClient webClient;
-    private final String menuServiceBaseUrl;
 
     public MenuServiceClient(WebClient.Builder webClientBuilder) {
         String menuServiceBaseUrl1;
@@ -27,11 +24,10 @@ public class MenuServiceClient {
         if (menuServiceBaseUrl1 == null || menuServiceBaseUrl1.isEmpty()) {
             menuServiceBaseUrl1 = "";
         }
-        this.menuServiceBaseUrl = menuServiceBaseUrl1;
+
         this.webClient = webClientBuilder.baseUrl(menuServiceBaseUrl1).build();
     }
 
-    // Asynchronous method to get a menu item
     public CompletableFuture<MenuServiceResponse> getMenuItemAsync(String menuItemId) {
         return webClient.get()
                 .uri("/api/menus/{id}", menuItemId)
@@ -41,7 +37,6 @@ public class MenuServiceClient {
                 .toFuture();
     }
 
-    // Fetch multiple menu items in parallel
     public CompletableFuture<List<MenuServiceResponse>> getMultipleMenuItemsAsync(List<String> menuItemIds) {
         List<CompletableFuture<MenuServiceResponse>> futures = 
             menuItemIds.stream()
@@ -72,15 +67,6 @@ public class MenuServiceClient {
                     return Mono.just(false);
                 })
                 .toFuture();
-    }
-
-    @Setter
-    @Getter
-    public static class ApiResponse<T> {
-        private boolean success;
-        private String message;
-        private T data;
-
     }
 
     public MenuServiceResponse getMenuItem(String menuItemId) {

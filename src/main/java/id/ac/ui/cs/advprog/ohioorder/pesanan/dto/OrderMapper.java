@@ -65,6 +65,7 @@ public class OrderMapper {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .total(0)
+                .locked(order.getLocked())
                 .build();
     }
 
