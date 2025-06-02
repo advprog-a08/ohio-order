@@ -50,7 +50,7 @@ jobs:
             IMAGE=${{ env.IMAGE_NAME }}:${{ github.sha }}
             DEPLOYMENT_NAME=ohio-order
             CONTAINER_NAME=ohio-order
-            ROLLBACK_FILE=oho_order.txt
+            ROLLBACK_FILE=ohio_order.txt
 
             cd ~/kube-rollbacks
 
